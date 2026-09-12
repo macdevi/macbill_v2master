@@ -1,13 +1,219 @@
 <?php
+
 namespace App\Http\Controllers;
+
+use App\Models\ActivityLog;
 use App\Models\Expense;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
 class ExpenseController extends Controller
 {
-    public function index(){return view('expenses.index',['expenses'=>Expense::latest('expense_date')->paginate(20)]);}
-    public function create(){return view('expenses.create');}
-    public function store(Request $r){$d=$r->validate(['title'=>'required|string|max:255','description'=>'nullable|string','amount'=>'required|numeric|min:0','expense_date'=>'required|date']);Expense::create($d);return redirect()->route('expenses.index')->with('success','Pengeluaran disimpan.');}
-    public function edit(Expense $expense){return view('expenses.create',compact('expense'));}
-    public function update(Request $r,Expense $expense){$expense->update($r->validate(['title'=>'required|string|max:255','description'=>'nullable|string','amount'=>'required|numeric|min:0','expense_date'=>'required|date']));return redirect()->route('expenses.index')->with('success','Pengeluaran diperbarui.');}
-    public function destroy(Expense $expense){$expense->delete();return back()->with('success','Pengeluaran dihapus.');}
+    public function index(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+        $month = (string) $request->query('month', now()->format('Y-m'));
+        $category = (string) $request->query('category', '');
+        $paymentMethod = (string) $request->query('payment_method', '');
+        $status = (string) $request->query('status', 'posted');
+
+        if (! preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $month = now()->format('Y-m');
+        }
+
+        if (! in_array($category, Expense::CATEGORIES, true)) {
+            $category = '';
+        }
+
+        if (! array_key_exists($paymentMethod, Expense::PAYMENT_METHODS)) {
+            $paymentMethod = '';
+        }
+
+        if (! in_array($status, ['posted', 'voided', 'all'], true)) {
+            $status = 'posted';
+        }
+
+        [$year, $monthNumber] = array_map('intval', explode('-', $month));
+        $monthStart = Carbon::create($year, $monthNumber, 1)->startOfMonth();
+        $monthEnd = $monthStart->copy()->endOfMonth();
+
+        $expenses = Expense::query()
+            ->with('createdBy:id,name,username,role')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($expenseQuery) use ($search) {
+                    $expenseQuery
+                        ->where('title', 'like', '%' . $search . '%')
+                        ->orWhere('vendor', 'like', '%' . $search . '%')
+                        ->orWhere('description', 'like', '%' . $search . '%');
+                });
+            })
+            ->whereBetween('expense_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->when($category !== '', fn ($query) => $query->where('category', $category))
+            ->when($paymentMethod !== '', fn ($query) => $query->where('payment_method', $paymentMethod))
+            ->when($status !== 'all', fn ($query) => $query->where('status', $status))
+            ->latest('expense_date')
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        $monthPostedQuery = Expense::posted()
+            ->whereBetween('expense_date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
+
+        $today = now()->toDateString();
+
+        return view('expenses.index', [
+            'expenses' => $expenses,
+            'search' => $search,
+            'month' => $month,
+            'category' => $category,
+            'paymentMethod' => $paymentMethod,
+            'status' => $status,
+            'categories' => Expense::CATEGORIES,
+            'paymentMethods' => Expense::PAYMENT_METHODS,
+            'monthTotal' => (float) (clone $monthPostedQuery)->sum('amount'),
+            'monthCount' => (clone $monthPostedQuery)->count(),
+            'todayTotal' => (float) Expense::posted()
+                ->whereDate('expense_date', $today)
+                ->sum('amount'),
+        ]);
+    }
+
+    public function create()
+    {
+        return view('expenses.create', [
+            'expense' => new Expense([
+                'expense_date' => now()->toDateString(),
+                'payment_method' => 'cash',
+                'category' => 'Operasional',
+            ]),
+            'categories' => Expense::CATEGORIES,
+            'paymentMethods' => Expense::PAYMENT_METHODS,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $expense = Expense::create(array_merge(
+            $this->validatedData($request),
+            ['created_by' => $request->user()->id]
+        ));
+
+        $this->writeLog(
+            'expense.created',
+            'Pengeluaran "' . $expense->title . '" sebesar Rp '
+                . number_format((float) $expense->amount, 0, ',', '.')
+                . ' ditambahkan.'
+        );
+
+        return redirect()
+            ->route('expenses.index')
+            ->with('success', 'Pengeluaran berhasil disimpan.');
+    }
+
+    public function edit(Expense $expense)
+    {
+        if ($expense->status === 'voided') {
+            return redirect()
+                ->route('expenses.index')
+                ->with('error', 'Pengeluaran yang sudah dibatalkan tidak dapat diedit.');
+        }
+
+        return view('expenses.create', [
+            'expense' => $expense,
+            'categories' => Expense::CATEGORIES,
+            'paymentMethods' => Expense::PAYMENT_METHODS,
+        ]);
+    }
+
+    public function update(Request $request, Expense $expense)
+    {
+        if ($expense->status === 'voided') {
+            return redirect()
+                ->route('expenses.index')
+                ->with('error', 'Pengeluaran yang sudah dibatalkan tidak dapat diperbarui.');
+        }
+
+        $oldAmount = (float) $expense->amount;
+        $expense->update($this->validatedData($request));
+
+        $this->writeLog(
+            'expense.updated',
+            'Pengeluaran "' . $expense->title . '" diperbarui. Nominal Rp '
+                . number_format($oldAmount, 0, ',', '.')
+                . ' menjadi Rp ' . number_format((float) $expense->amount, 0, ',', '.') . '.'
+        );
+
+        return redirect()
+            ->route('expenses.index')
+            ->with('success', 'Pengeluaran berhasil diperbarui.');
+    }
+
+    public function destroy(Expense $expense)
+    {
+        if ($expense->status === 'voided') {
+            return back()->with('error', 'Pengeluaran ini sudah dibatalkan sebelumnya.');
+        }
+
+        $expense->update([
+            'status' => 'voided',
+            'voided_at' => now(),
+        ]);
+
+        $this->writeLog(
+            'expense.voided',
+            'Pengeluaran "' . $expense->title . '" sebesar Rp '
+                . number_format((float) $expense->amount, 0, ',', '.')
+                . ' dibatalkan.'
+        );
+
+        return back()->with('success', 'Pengeluaran berhasil dibatalkan dan tetap tersimpan sebagai riwayat.');
+    }
+
+    private function validatedData(Request $request): array
+    {
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'category' => ['required', Rule::in(Expense::CATEGORIES)],
+            'vendor' => ['nullable', 'string', 'max:255'],
+            'payment_method' => ['required', Rule::in(array_keys(Expense::PAYMENT_METHODS))],
+            'amount' => ['required', 'numeric', 'min:1', 'max:999999999999.99'],
+            'expense_date' => ['required', 'date'],
+            'description' => ['nullable', 'string', 'max:5000'],
+        ], [
+            'title.required' => 'Judul pengeluaran wajib diisi.',
+            'category.required' => 'Kategori pengeluaran wajib dipilih.',
+            'category.in' => 'Kategori pengeluaran tidak valid.',
+            'vendor.max' => 'Nama penerima/vendor maksimal 255 karakter.',
+            'payment_method.required' => 'Metode pembayaran wajib dipilih.',
+            'payment_method.in' => 'Metode pembayaran tidak valid.',
+            'amount.required' => 'Nominal pengeluaran wajib diisi.',
+            'amount.numeric' => 'Nominal pengeluaran harus berupa angka.',
+            'amount.min' => 'Nominal pengeluaran minimal Rp 1.',
+            'amount.max' => 'Nominal pengeluaran terlalu besar.',
+            'expense_date.required' => 'Tanggal pengeluaran wajib diisi.',
+            'expense_date.date' => 'Tanggal pengeluaran tidak valid.',
+            'description.max' => 'Keterangan maksimal 5.000 karakter.',
+        ]);
+
+        $data['title'] = trim($data['title']);
+        $data['vendor'] = isset($data['vendor']) && trim($data['vendor']) !== ''
+            ? trim($data['vendor'])
+            : null;
+        $data['description'] = isset($data['description']) && trim($data['description']) !== ''
+            ? trim($data['description'])
+            : null;
+        $data['amount'] = round((float) $data['amount'], 2);
+
+        return $data;
+    }
+
+    private function writeLog(string $action, string $description): void
+    {
+        ActivityLog::create([
+            'action' => $action,
+            'description' => $description,
+            'ip_address' => request()->ip(),
+        ]);
+    }
 }
