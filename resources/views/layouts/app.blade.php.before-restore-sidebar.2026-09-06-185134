@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="id" x-data="{dark:false,menu:false}" :class="{dark:dark}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>{{ config('app.name','macbilling_v2') }}</title>
+
+@vite(['resources/css/app.css','resources/js/app.js'])
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+</head>
+
+<body class="min-h-screen text-slate-900 dark:text-slate-100">
+
+<div class="min-h-screen flex">
+
+<!-- MOBILE OVERLAY -->
+<div 
+x-show="menu"
+@click="menu=false"
+class="fixed inset-0 bg-black/40 z-40 lg:hidden">
+</div>
+
+
+<!-- SIDEBAR -->
+<aside 
+:class="menu ? 'translate-x-0' : '-translate-x-full'"
+class="fixed lg:static z-50 inset-y-0 left-0 w-64 flex flex-col border-r border-slate-200 dark:border-cyan-500/10 bg-white dark:bg-slate-950 p-5 transition-transform duration-300 lg:translate-x-0">
+
+
+<div class="text-xl font-black tracking-wider text-cyan-500 mb-8">
+MAC<span class="text-slate-700 dark:text-white">BILLING</span>
+</div>
+
+
+<nav class="space-y-1 text-sm">
+
+<a href="{{route('dashboard')}}"
+class="block rounded-xl px-4 py-3 hover:bg-cyan-500/10">
+◈ Dashboard
+<br>
+<a href="/users">◈ Manajemen User</a>
+</a>
+
+
+<a href="{{route('customers.index')}}"
+class="block rounded-xl px-4 py-3 hover:bg-cyan-500/10">
+◎ Pelanggan
+</a>
+
+
+<a href="{{route('packages.index')}}"
+class="block rounded-xl px-4 py-3 hover:bg-cyan-500/10">
+◫ Paket Internet
+</a>
+
+
+<a href="{{route('invoices.index')}}"
+class="block rounded-xl px-4 py-3 hover:bg-cyan-500/10">
+▣ Tagihan
+</a>
+
+
+<a href="{{route('expenses.index')}}"
+class="block rounded-xl px-4 py-3 hover:bg-cyan-500/10">
+↘ Pengeluaran
+</a>
+
+
+<a href="{{route('routers.index')}}"
+class="block rounded-xl px-4 py-3 hover:bg-cyan-500/10">
+⌁ MikroTik
+</a>
+
+
+</nav>
+
+
+<div class="mt-auto text-xs text-slate-400">
+macbilling_v2<br>
+RT/RW Net Billing
+</div>
+
+
+</aside>
+
+
+
+<!-- CONTENT -->
+
+<main class="flex-1">
+
+
+<header class="h-16 border-b border-slate-200 dark:border-cyan-500/10 bg-white dark:bg-slate-950 px-5 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+
+
+<div class="flex items-center">
+
+<button 
+@click="menu=true"
+class="lg:hidden mr-4 text-2xl">
+☰
+</button>
+
+
+<div class="font-semibold">
+@yield('title','Dashboard')
+</div>
+
+
+</div>
+
+
+
+<button 
+@click="dark=!dark"
+class="rounded-full border px-4 py-2 text-xs">
+
+<span x-text="dark?'☾ Dark':'☀ Light'"></span>
+
+</button>
+
+
+</header>
+
+
+
+<section class="p-5 lg:p-8">
+
+
+@if(session('success'))
+
+<div class="mb-5 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-emerald-500">
+{{session('success')}}
+</div>
+
+@endif
+
+
+
+@if($errors->any())
+
+<div class="mb-5 rounded-xl border border-rose-400/30 bg-rose-500/10 p-4 text-rose-500">
+
+<ul>
+
+@foreach($errors->all() as $error)
+
+<li>{{ $error }}</li>
+
+@endforeach
+
+</ul>
+
+</div>
+
+@endif
+
+
+
+@yield('content')
+
+
+</section>
+
+
+</main>
+
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,2 @@
+@extends('layouts.app') @section('title','Tambah Pelanggan') @section('content')
+<form method="post" action="{{route('customers.store')}}" class="max-w-3xl space-y-5">@csrf @include('customers.form')<button class="rounded-xl bg-cyan-500 px-5 py-3 font-bold text-slate-950">Simpan & Sinkron MikroTik</button></form>@endsection

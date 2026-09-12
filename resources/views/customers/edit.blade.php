@@ -1,0 +1,2 @@
+@extends('layouts.app') @section('title','Edit Pelanggan') @section('content')
+<form method="post" action="{{route('customers.update',$customer)}}" class="max-w-3xl space-y-5">@csrf @method('PUT') @include('customers.form')<button class="rounded-xl bg-cyan-500 px-5 py-3 font-bold text-slate-950">Simpan Perubahan</button></form>@endsection

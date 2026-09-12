@@ -1,0 +1,1 @@
+@extends('layouts.app') @section('title','Tambah Paket') @section('content')<form method="post" action="{{route('packages.store')}}" class="max-w-xl space-y-4">@csrf @include('packages.form')<button class="rounded-xl bg-cyan-500 px-5 py-3 font-bold">Simpan</button></form>@endsection

@@ -1,0 +1,1 @@
+@extends('layouts.app') @section('title','Edit Paket') @section('content')<form method="post" action="{{route('packages.update',$package)}}" class="max-w-xl space-y-4">@csrf @method('PUT') @include('packages.form')<button class="rounded-xl bg-cyan-500 px-5 py-3 font-bold">Simpan</button></form>@endsection

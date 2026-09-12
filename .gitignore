@@ -1,0 +1,21 @@
+/.phpunit.cache
+/node_modules
+/public/build
+/storage/*.key
+/storage/app/public/*
+.env
+/vendor
+
+# Runtime files and generated cache
+/storage/logs/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+/bootstrap/cache/*.php
+
+# Local database, generated storage, and manual backup files
+/database/database.sqlite
+/public/storage
+*.bak.*
+*.backup.*
+*.backup2.*

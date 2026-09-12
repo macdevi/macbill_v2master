@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration;use Illuminate\Database\Schema\Blueprint;use Illuminate\Support\Facades\Schema;
+return new class extends Migration{public function up():void{Schema::create('invoices',function(Blueprint $t){$t->id();$t->foreignId('customer_id')->constrained()->cascadeOnDelete();$t->string('invoice_number')->unique();$t->date('billing_date');$t->date('due_date');$t->decimal('amount',15,2);$t->enum('status',['unpaid','paid','isolated'])->default('unpaid');$t->timestamps();});}public function down():void{Schema::dropIfExists('invoices');}};

@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+@theme { --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif; }
+body { background: #f8fafc; }
+.dark body { background: #070b14; color: #e2e8f0; }
+.neon { box-shadow: 0 0 0 1px rgba(34,211,238,.18), 0 0 24px rgba(34,211,238,.08); }
