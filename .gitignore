@@ -19,3 +19,12 @@
 *.bak.*
 *.backup.*
 *.backup2.*
+
+# Ignore all generated/runtime storage files
+/storage/*
+!/storage/.gitignore
+!/storage/**/.gitignore
+!/storage/**/.gitkeep
+
+# One-time local helper script; output is already in app.blade.php
+/modern_light_sidebar.py

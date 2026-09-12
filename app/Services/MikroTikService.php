@@ -70,14 +70,54 @@ class MikroTikService
 
     public function isolate(Customer $customer): array
     {
-        $secret = $this->secret($customer->router, $customer->pppoe_username);
-        if (!$secret) throw new RuntimeException('PPPoE secret tidak ditemukan di MikroTik.');
-        $query = (new Query('/ppp/secret/set'))
-            ->equal('.id', $secret['.id'])
-            ->equal('profile', config('mikrotik.isolation_profile'));
-        return $this->client($customer->router)->query($query)->read();
-    }
+        $customer->loadMissing('router');
 
+        if (! $customer->router) {
+            throw new RuntimeException('Router pelanggan tidak ditemukan.');
+        }
+
+        $isolationProfile = trim((string) $customer->router->isolation_profile);
+
+        if ($isolationProfile === '') {
+            throw new RuntimeException(
+                "Profile isolasi belum diatur untuk router {$customer->router->name}."
+            );
+        }
+
+        $client = $this->client($customer->router);
+
+        $secretQuery = (new Query('/ppp/secret/print'))
+            ->where('name', $customer->pppoe_username);
+
+        $secrets = $client->query($secretQuery)->read();
+        $secret = $secrets[0] ?? null;
+
+        if (! $secret) {
+            throw new RuntimeException('PPPoE secret tidak ditemukan di MikroTik.');
+        }
+
+        $isolateQuery = (new Query('/ppp/secret/set'))
+            ->equal('.id', $secret['.id'])
+            ->equal('profile', $isolationProfile);
+
+        $client->query($isolateQuery)->read();
+
+        $activeQuery = (new Query('/ppp/active/print'))
+            ->where('name', $customer->pppoe_username);
+
+        $activeSessions = $client->query($activeQuery)->read();
+
+        foreach ($activeSessions as $session) {
+            if (! empty($session['.id'])) {
+                $disconnectQuery = (new Query('/ppp/active/remove'))
+                    ->equal('.id', $session['.id']);
+
+                $client->query($disconnectQuery)->read();
+            }
+        }
+
+        return $activeSessions;
+    }
     public function activate(Customer $customer): array
     {
         return $this->updatePppoeSecret($customer->router, $customer);

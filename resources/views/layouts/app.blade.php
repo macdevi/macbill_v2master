@@ -131,16 +131,16 @@
                             MAC<span class="text-cyan-600 dark:text-cyan-400">BILLING</span>
                         </div>
                         <div class="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
-                            Super Admin Workspace
+                            Panel Administrasi
                         </div>
                     </div>
                 </div>
             </div>
 
-            <nav class="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-1 text-sm">
+            <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto px-1 pr-2 text-sm">
                 @foreach($sections as $section)
                     @if($section['title'])
-                        <div class="px-3 pb-1 pt-5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-slate-400 dark:text-slate-500">
+                        <div class="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
                             {{ $section['title'] }}
                         </div>
                     @endif
@@ -166,9 +166,9 @@
 
                         <a href="{{ $item['href'] }}"
                            @click="menu = false"
-                           class="group flex items-center gap-2 rounded-lg px-2 py-1.5 font-semibold transition duration-200 focus:outline-none focus:ring-4 focus:ring-cyan-300/40 dark:focus:ring-cyan-400/20 {{ $linkClass }}"
+                           class="group flex items-center gap-3 rounded-xl px-3 py-2.5 font-semibold transition duration-200 focus:outline-none focus:ring-4 focus:ring-cyan-300/40 dark:focus:ring-cyan-400/20 {{ $linkClass }}"
                            @if($item['active']) aria-current="page" @endif>
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition {{ $iconClass }}">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition {{ $iconClass }}">
                                 <img src="{{ $item['icon'] }}"
                                      alt=""
                                      class="h-5 w-5 object-contain"
@@ -177,27 +177,27 @@
                             <span class="truncate">{{ $item['label'] }}</span>
 
                             @if($item['active'])
-                                <span class="h-5 w-1 shrink-0 rounded-full bg-cyan-500 dark:bg-cyan-300"></span>
+                                <span class="ml-auto h-2 w-2 shrink-0 rounded-full bg-cyan-500 shadow-sm shadow-cyan-500/50 dark:bg-cyan-300"></span>
                             @endif
                         </a>
                     @endforeach
                 @endforeach
             </nav>
 
-            <div class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400">
+            <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-400">
                 <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                     Environment
                 </div>
                 <div class="mt-1.5 text-sm font-bold text-slate-800 dark:text-slate-100">
                     macbilling_v2
                 </div>
-                <div class="mt-0.5">RT/RW Net Billing</div>
+                <div class="mt-0.5">Manajemen layanan pelanggan</div>
             </div>
 
             <form method="POST" action="{{ url('/logout') }}" class="mt-3">
                 @csrf
                 <button type="submit"
-                        class="group flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:focus:ring-slate-600">
+                        class="group flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:focus:ring-slate-600">
                     <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-white/10 transition group-hover:bg-white/15">
                         <img src="https://img.icons8.com/fluency/48/logout-rounded-left.png"
                              alt=""

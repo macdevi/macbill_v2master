@@ -167,18 +167,52 @@ class CustomerController extends Controller
 
     public function isolate(Customer $customer, MikroTikService $mikrotik)
     {
-        $mikrotik->isolate($customer);
-        $customer->update(['status' => 'isolated']);
+        try {
+            $activeSessions = $mikrotik->isolate($customer);
 
-        return back()->with('success', 'Pelanggan diisolir.');
+            $customer->update(['status' => 'isolated']);
+
+            ActivityLogController::write(
+                'customer.isolated',
+                "Pelanggan {$customer->name} ({$customer->pppoe_username}) diisolir."
+            );
+
+            $message = count($activeSessions) > 0
+                ? 'Pelanggan diisolir dan ' . count($activeSessions) . ' sesi PPPoE aktif diputus.'
+                : 'Pelanggan diisolir. Tidak ada sesi PPPoE aktif yang perlu diputus.';
+
+            return back()->with('success', $message);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with(
+                'error',
+                'Gagal mengisolir pelanggan: ' . $e->getMessage()
+            );
+        }
     }
 
     public function activate(Customer $customer, MikroTikService $mikrotik)
     {
-        $mikrotik->activate($customer);
-        $customer->update(['status' => 'active']);
+        try {
+            $mikrotik->activate($customer);
 
-        return back()->with('success', 'Pelanggan diaktifkan.');
+            $customer->update(['status' => 'active']);
+
+            ActivityLogController::write(
+                'customer.activated',
+                "Pelanggan {$customer->name} ({$customer->pppoe_username}) diaktifkan."
+            );
+
+            return back()->with('success', 'Pelanggan diaktifkan.');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with(
+                'error',
+                'Gagal mengaktifkan pelanggan: ' . $e->getMessage()
+            );
+        }
     }
 }
 

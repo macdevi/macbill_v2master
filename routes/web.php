@@ -57,8 +57,8 @@ Route::post('/customers/import/mikrotik/store', [CustomerMikrotikImportControlle
         Route::post('/invoices/generate/mass', [InvoiceController::class, 'generateMass'])->name('invoices.generate.mass');
         Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
         Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store');
-        Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
-        Route::post('/payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
+        //        Route::post('/payments/{payment}/verify', [PaymentController::class, 'verify'])->name('payments.verify');
+        //        Route::post('/payments/{payment}/reject', [PaymentController::class, 'reject'])->name('payments.reject');
 
         Route::resource('expenses', ExpenseController::class)->except(['show']);
 
