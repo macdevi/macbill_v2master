@@ -28,3 +28,6 @@
 
 # One-time local helper script; output is already in app.blade.php
 /modern_light_sidebar.py
+
+# Local maintenance backups
+/backups/

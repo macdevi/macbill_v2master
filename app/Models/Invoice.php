@@ -8,6 +8,7 @@ class Invoice extends Model
 {
     protected $fillable = [
         'customer_id',
+        'billing_period',
         'invoice_number',
         'billing_date',
         'due_date',
@@ -24,6 +25,7 @@ class Invoice extends Model
     ];
 
     protected $casts = [
+        'billing_period' => 'date',
         'billing_date' => 'date',
         'due_date' => 'date',
         'service_amount' => 'decimal:2',
