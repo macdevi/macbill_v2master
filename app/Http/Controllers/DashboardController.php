@@ -17,7 +17,7 @@ class DashboardController extends Controller
     public function index()
     {
         $income = Payment::where('status','verified')->sum('amount');
-        $expense = Expense::sum('amount');
+        $expense = Expense::posted()->sum('amount');
 
         return view('dashboard',[
             'income'=>$income,
