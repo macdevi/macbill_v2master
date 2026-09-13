@@ -31,3 +31,6 @@
 
 # Local maintenance backups
 /backups/
+*.before-*
+*.backup
+*.before
