@@ -38,8 +38,13 @@ class ExpenseController extends Controller
         $monthStart = Carbon::create($year, $monthNumber, 1)->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
 
+        $user = $request->user();
+
         $expenses = Expense::query()
             ->with('createdBy:id,name,username,role')
+            ->when(in_array($user?->role, ['admin', 'kasir'], true), function ($query) use ($user) {
+                $query->whereIn('area_id', $user->activeAreaIds());
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($expenseQuery) use ($search) {
                     $expenseQuery
@@ -58,6 +63,9 @@ class ExpenseController extends Controller
             ->withQueryString();
 
         $monthPostedQuery = Expense::posted()
+            ->when(in_array($user?->role, ['admin', 'kasir'], true), function ($query) use ($user) {
+                $query->whereIn('area_id', $user->activeAreaIds());
+            })
             ->whereBetween('expense_date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
 
         $today = now()->toDateString();
@@ -74,6 +82,9 @@ class ExpenseController extends Controller
             'monthTotal' => (float) (clone $monthPostedQuery)->sum('amount'),
             'monthCount' => (clone $monthPostedQuery)->count(),
             'todayTotal' => (float) Expense::posted()
+                ->when(in_array($user?->role, ['admin', 'kasir'], true), function ($query) use ($user) {
+                    $query->whereIn('area_id', $user->activeAreaIds());
+                })
                 ->whereDate('expense_date', $today)
                 ->sum('amount'),
         ]);
@@ -94,9 +105,24 @@ class ExpenseController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        $data = $this->validatedData($request);
+
+        if (in_array($user?->role, ['admin', 'kasir'], true)) {
+            $areaId = $user->activeAreaIds()->first();
+
+            abort_unless(
+                $areaId,
+                403,
+                'Anda tidak memiliki area aktif untuk mencatat pengeluaran.'
+            );
+
+            $data['area_id'] = (int) $areaId;
+        }
+
         $expense = Expense::create(array_merge(
-            $this->validatedData($request),
-            ['created_by' => $request->user()->id]
+            $data,
+            ['created_by' => $user->id]
         ));
 
         $this->writeLog(
@@ -113,6 +139,8 @@ class ExpenseController extends Controller
 
     public function edit(Expense $expense)
     {
+        $this->authorizeExpenseArea($expense);
+
         if ($expense->status === 'voided') {
             return redirect()
                 ->route('expenses.index')
@@ -128,6 +156,8 @@ class ExpenseController extends Controller
 
     public function update(Request $request, Expense $expense)
     {
+        $this->authorizeExpenseArea($expense);
+
         if ($expense->status === 'voided') {
             return redirect()
                 ->route('expenses.index')
@@ -151,6 +181,8 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
+        $this->authorizeExpenseArea($expense);
+
         if ($expense->status === 'voided') {
             return back()->with('error', 'Pengeluaran ini sudah dibatalkan sebelumnya.');
         }
@@ -168,6 +200,28 @@ class ExpenseController extends Controller
         );
 
         return back()->with('success', 'Pengeluaran berhasil dibatalkan dan tetap tersimpan sebagai riwayat.');
+    }
+
+    private function authorizeExpenseArea(Expense $expense): void
+    {
+        $user = request()->user();
+
+        if ($user?->isSuperAdmin()) {
+            return;
+        }
+
+        abort_unless(
+            in_array($user?->role, ['admin', 'kasir'], true),
+            403,
+            'Anda tidak memiliki akses ke pengeluaran ini.'
+        );
+
+        abort_unless(
+            $expense->area_id
+                && $user->activeAreaIds()->contains((int) $expense->area_id),
+            403,
+            'Anda tidak memiliki akses ke pengeluaran di luar area penugasan.'
+        );
     }
 
     private function validatedData(Request $request): array

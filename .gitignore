@@ -34,3 +34,7 @@
 *.before-*
 *.backup
 *.before
+
+# Local patch backups
+*.bak_*
+*before_*

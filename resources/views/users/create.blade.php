@@ -109,6 +109,67 @@
                 </div>
             </div>
 
+
+                <div>
+                    <div class="mb-2 flex items-center justify-between gap-3">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-200">
+                            Wilayah Penugasan
+                        </label>
+                        <span class="rounded-full bg-violet-50 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
+                            Wajib dipilih
+                        </span>
+                    </div>
+
+                    <p class="mb-3 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                        Admin dan kasir hanya dapat mengakses data dari wilayah yang dipilih.
+                    </p>
+
+                    @php
+                        $selectedAreaIds = collect(old(
+                            'area_ids',
+                            isset($user) ? $user->areas->pluck('id')->all() : []
+                        ))->map(fn ($id) => (int) $id)->all();
+                    @endphp
+
+                    @if($areas->isEmpty())
+                        <div class="rounded-xl border border-dashed border-amber-300 bg-amber-50 px-3.5 py-3 text-xs font-medium text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300">
+                            Belum ada wilayah aktif. Buat dan aktifkan wilayah terlebih dahulu.
+                        </div>
+                    @else
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            @foreach($areas as $area)
+                                <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 transition hover:border-violet-300 hover:bg-violet-50/40 dark:border-slate-700 dark:bg-slate-950 dark:hover:border-violet-400/40 dark:hover:bg-violet-400/5">
+                                    <input type="checkbox"
+                                           name="area_ids[]"
+                                           value="{{ $area->id }}"
+                                           @checked(in_array($area->id, $selectedAreaIds, true))
+                                           class="mt-0.5 h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 dark:border-slate-600 dark:bg-slate-900 dark:focus:ring-violet-400">
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-sm font-bold text-slate-800 dark:text-slate-100">
+                                            {{ $area->name }}
+                                        </span>
+                                        <span class="mt-0.5 block font-mono text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                                            {{ $area->code }}
+                                        </span>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @error('area_ids')
+                        <p class="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
+                            {{ $message }}
+                        </p>
+                    @enderror
+
+                    @error('area_ids.*')
+                        <p class="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
             <div class="mt-7 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-end dark:border-slate-800">
                 <a href="/users"
                    class="inline-flex justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">

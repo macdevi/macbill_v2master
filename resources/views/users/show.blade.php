@@ -92,6 +92,48 @@
                 </div>
             </dl>
 
+            <div class="mt-5 border-t border-slate-100 pt-5 dark:border-slate-800">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100">
+                            Wilayah Penugasan
+                        </h3>
+                        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            Batas akses operasional untuk akun ini.
+                        </p>
+                    </div>
+
+                    @if($user->isSuperAdmin())
+                        <span class="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:bg-violet-400/10 dark:text-violet-300">
+                            Akses global
+                        </span>
+                    @endif
+                </div>
+
+                @if($user->isSuperAdmin())
+                    <p class="mt-3 rounded-xl border border-violet-100 bg-violet-50 px-3.5 py-3 text-xs font-medium text-violet-700 dark:border-violet-400/20 dark:bg-violet-400/10 dark:text-violet-300">
+                        Super Admin dapat mengakses seluruh wilayah operasional.
+                    </p>
+                @elseif($user->areas->isEmpty())
+                    <p class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-xs font-medium text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300">
+                        User ini belum memiliki penugasan wilayah.
+                    </p>
+                @else
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @foreach($user->areas as $area)
+                            <span class="inline-flex items-center gap-1.5 rounded-lg border border-violet-100 bg-violet-50 px-2.5 py-1.5 text-xs font-bold text-violet-700 dark:border-violet-400/20 dark:bg-violet-400/10 dark:text-violet-300">
+                                <span class="h-1.5 w-1.5 rounded-full bg-violet-500"></span>
+                                {{ $area->name }}
+                                <span class="font-mono text-[10px] font-semibold opacity-70">
+                                    {{ $area->code }}
+                                </span>
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+
             <div class="mt-7 flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-end dark:border-slate-800">
                 <a href="/users"
                    class="inline-flex justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">

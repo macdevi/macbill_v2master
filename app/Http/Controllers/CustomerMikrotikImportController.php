@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Area;
 use App\Models\Customer;
 use App\Models\InternetPackage;
 use App\Models\Router;
@@ -9,6 +10,7 @@ use App\Services\MikroTikService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use RuntimeException;
 
 class CustomerMikrotikImportController extends Controller
@@ -25,6 +27,10 @@ class CustomerMikrotikImportController extends Controller
                 ->where('active', true)
                 ->orderBy('name')
                 ->get(),
+            'areas' => Area::query()
+                ->where('active', true)
+                ->orderBy('name')
+                ->get(['id', 'code', 'name']),
         ]);
     }
 
@@ -32,11 +38,25 @@ class CustomerMikrotikImportController extends Controller
     {
         $data = $request->validate([
             'router_id' => ['required', 'integer', 'exists:routers,id'],
+            'area_id' => [
+                'required',
+                'integer',
+                Rule::exists('areas', 'id')->where(
+                    fn ($query) => $query->where('active', true)
+                ),
+            ],
+        ], [
+            'area_id.required' => 'Pilih wilayah tujuan import.',
+            'area_id.exists' => 'Wilayah tujuan tidak tersedia atau sudah nonaktif.',
         ]);
 
         $router = Router::query()
             ->where('active', true)
             ->findOrFail($data['router_id']);
+
+        $area = Area::query()
+            ->where('active', true)
+            ->findOrFail($data['area_id']);
 
         try {
             $secrets = $mikrotik->allPppoeUsers($router);
@@ -88,6 +108,7 @@ class CustomerMikrotikImportController extends Controller
 
         return view('customers.import-mikrotik-preview', [
             'router' => $router,
+            'area' => $area,
             'records' => $records,
             'packages' => InternetPackage::query()
                 ->where('active', true)
@@ -100,6 +121,13 @@ class CustomerMikrotikImportController extends Controller
     {
         $data = $request->validate([
             'router_id' => ['required', 'integer', 'exists:routers,id'],
+            'area_id' => [
+                'required',
+                'integer',
+                Rule::exists('areas', 'id')->where(
+                    fn ($query) => $query->where('active', true)
+                ),
+            ],
             'customers' => ['required', 'array', 'min:1'],
             'customers.*.selected' => ['nullable', 'in:1'],
             'customers.*.pppoe_username' => ['nullable', 'string', 'max:100'],
@@ -110,11 +138,18 @@ class CustomerMikrotikImportController extends Controller
             'customers.*.internet_package_id' => ['nullable', 'integer'],
             'customers.*.due_day' => ['nullable', 'integer', 'min:1', 'max:28'],
             'customers.*.status' => ['nullable', 'in:active,inactive'],
+        ], [
+            'area_id.required' => 'Wilayah tujuan import wajib dipilih.',
+            'area_id.exists' => 'Wilayah tujuan tidak tersedia atau sudah nonaktif.',
         ]);
 
         $router = Router::query()
             ->where('active', true)
             ->findOrFail($data['router_id']);
+
+        $area = Area::query()
+            ->where('active', true)
+            ->findOrFail($data['area_id']);
 
         $selected = collect($data['customers'])
             ->filter(fn (array $row) => ($row['selected'] ?? null) === '1')
@@ -129,7 +164,7 @@ class CustomerMikrotikImportController extends Controller
         $errors = [];
         $created = 0;
 
-        DB::transaction(function () use ($selected, $router, &$errors, &$created) {
+        DB::transaction(function () use ($selected, $router, $area, &$errors, &$created) {
             $seen = [];
 
             foreach ($selected as $number => $row) {
@@ -161,12 +196,16 @@ class CustomerMikrotikImportController extends Controller
                     continue;
                 }
 
-                if (!InternetPackage::query()->where('active', true)->whereKey($packageId)->exists()) {
+                if (!InternetPackage::query()
+                    ->where('active', true)
+                    ->whereKey($packageId)
+                    ->exists()) {
                     $errors[] = 'Paket untuk '.$username.' tidak valid atau tidak aktif.';
                     continue;
                 }
 
                 Customer::create([
+                    'area_id' => $area->id,
                     'router_id' => $router->id,
                     'internet_package_id' => $packageId,
                     'customer_code' => 'CUST-'.strtoupper(Str::random(8)),
@@ -183,11 +222,15 @@ class CustomerMikrotikImportController extends Controller
             }
 
             if ($created === 0) {
-                throw new RuntimeException($errors !== [] ? implode(' ', $errors) : 'Tidak ada pelanggan yang berhasil diimpor.');
+                throw new RuntimeException(
+                    $errors !== []
+                        ? implode(' ', $errors)
+                        : 'Tidak ada pelanggan yang berhasil diimpor.'
+                );
             }
         });
 
-        $message = $created.' pelanggan berhasil diimpor.';
+        $message = $created.' pelanggan berhasil diimpor ke wilayah '.$area->name.'.';
 
         if ($errors !== []) {
             $message .= ' Sebagian baris dilewati: '.implode(' ', $errors);

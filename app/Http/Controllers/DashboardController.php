@@ -8,17 +8,83 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Router;
 use App\Services\MikroTikService;
-use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
     /**
+     * Query customer yang terlihat oleh user saat ini.
+     * Super Admin melihat global; Admin hanya area assignment aktif.
+     */
+    private function visibleCustomerQuery(): Builder
+    {
+        $user = auth()->user();
+
+        $query = Customer::query();
+
+        if (!$user || !$user->isSuperAdmin()) {
+            $query->whereIn('area_id', $user?->activeAreaIds() ?? []);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Batasi query invoice melalui customer.area_id untuk Admin.
+     */
+    private function applyInvoiceAreaScope(Builder $query): Builder
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->isSuperAdmin()) {
+            $areaIds = $user?->activeAreaIds() ?? [];
+
+            $query->whereHas('customer', function (Builder $customerQuery) use ($areaIds) {
+                $customerQuery->whereIn('area_id', $areaIds);
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * Batasi query payment melalui invoice.customer.area_id untuk Admin.
+     */
+    private function applyPaymentAreaScope(Builder $query): Builder
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->isSuperAdmin()) {
+            $areaIds = $user?->activeAreaIds() ?? [];
+
+            $query->whereHas('invoice.customer', function (Builder $customerQuery) use ($areaIds) {
+                $customerQuery->whereIn('area_id', $areaIds);
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * Batasi expense langsung memakai area_id.
+     * Expense global (area_id NULL) hanya tampil untuk Super Admin.
+     */
+    private function applyExpenseAreaScope(Builder $query): Builder
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->isSuperAdmin()) {
+            $query->whereIn('area_id', $user?->activeAreaIds() ?? []);
+        }
+
+        return $query;
+    }
+
+    /**
      * Dashboard ringkasan koneksi PPPoE real-time.
-     *
-     * Online dihitung dari username yang muncul pada /ppp/active/print
-     * di seluruh router MikroTik yang aktif.
      */
     public function index(MikroTikService $mikrotik): View
     {
@@ -42,10 +108,6 @@ class DashboardController extends Controller
                     }
                 }
             } catch (\Throwable $e) {
-                /*
-                 * Dashboard tetap terbuka bila salah satu router tidak dapat dibaca.
-                 * Jangan tampilkan kredensial router pada respons/browser.
-                 */
                 Log::warning('Dashboard gagal membaca PPPoE aktif dari MikroTik.', [
                     'router_id' => $router->id,
                     'router_name' => $router->name,
@@ -54,14 +116,11 @@ class DashboardController extends Controller
             }
         }
 
-        /*
-         * Ambil data aman untuk dashboard.
-         * pppoe_password tidak dipilih dan tidak pernah dikirim ke browser.
-         */
-        $customers = Customer::query()
+        $customers = $this->visibleCustomerQuery()
             ->with(['router:id,name'])
             ->select([
                 'id',
+                'area_id',
                 'router_id',
                 'customer_code',
                 'name',
@@ -78,7 +137,6 @@ class DashboardController extends Controller
 
         foreach ($customers as $customer) {
             $username = mb_strtolower(trim((string) $customer->pppoe_username));
-
             $isOnline = $username !== '' && isset($onlineUsernames[$username]);
             $isIsolated = $customer->status === 'isolated';
 
@@ -91,10 +149,6 @@ class DashboardController extends Controller
                 'router_name' => $customer->router?->name,
             ];
 
-            /*
-             * Pelanggan isolate selalu ditampilkan sebagai Terisolir,
-             * walaupun sesi PPPoE-nya masih kebetulan terlihat aktif.
-             */
             if ($isIsolated) {
                 $isolatedList[] = $customerData;
             } elseif ($isOnline) {
@@ -123,38 +177,24 @@ class DashboardController extends Controller
             'isolated' => $isolatedList,
         ];
 
-        /*
-         * Ringkasan keuangan bulan berjalan.
-         *
-         * - Estimasi: invoice periode bulan ini, selain invoice terisolir.
-         * - Pendapatan: pembayaran yang sudah diverifikasi pada bulan ini.
-         * - Pengeluaran: pengeluaran posted pada bulan ini.
-         * - Tertunda: invoice unpaid maupun isolated yang telah terbit sampai hari ini.
-         */
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
         $today = now()->toDateString();
 
-        /*
-         * Estimasi pendapatan hybrid:
-         * - Jika invoice periode bulan ini sudah dibuat, gunakan total invoice resmi.
-         * - Jika belum ada invoice sama sekali, gunakan tarif pelanggan yang masih ditagih:
-         *   override harga pelanggan bila tersedia, jika tidak harga paket internet.
-         *
-         * Customer isolated tetap memiliki tagihan; mereka tidak dikeluarkan dari estimasi.
-         */
-        $currentPeriodInvoices = Invoice::query()
-            ->whereBetween('billing_period', [
-                $monthStart->toDateString(),
-                $monthEnd->toDateString(),
-            ]);
+        $currentPeriodInvoices = $this->applyInvoiceAreaScope(
+            Invoice::query()
+                ->whereBetween('billing_period', [
+                    $monthStart->toDateString(),
+                    $monthEnd->toDateString(),
+                ])
+        );
 
         $currentPeriodInvoiceCount = (clone $currentPeriodInvoices)->count();
 
         if ($currentPeriodInvoiceCount > 0) {
             $estimatedRevenue = (float) (clone $currentPeriodInvoices)->sum('amount');
         } else {
-            $estimatedRevenue = (float) Customer::query()
+            $estimatedRevenue = (float) $this->visibleCustomerQuery()
                 ->with('internetPackage:id,monthly_price')
                 ->whereIn('status', ['active', 'isolated'])
                 ->get(['id', 'internet_package_id', 'monthly_price_override'])
@@ -165,28 +205,32 @@ class DashboardController extends Controller
                 });
         }
 
-        $monthlyIncome = (float) Payment::query()
-            ->where('status', 'verified')
-            ->whereNotNull('paid_at')
-            ->whereBetween('paid_at', [
-                $monthStart->copy()->startOfDay(),
-                $monthEnd->copy()->endOfDay(),
-            ])
-            ->sum('amount');
+        $monthlyIncome = (float) $this->applyPaymentAreaScope(
+            Payment::query()
+                ->where('status', 'verified')
+                ->whereNotNull('paid_at')
+                ->whereBetween('paid_at', [
+                    $monthStart->copy()->startOfDay(),
+                    $monthEnd->copy()->endOfDay(),
+                ])
+        )->sum('amount');
 
-        $monthlyExpense = (float) Expense::query()
-            ->where('status', 'posted')
-            ->whereBetween('expense_date', [
-                $monthStart->toDateString(),
-                $monthEnd->toDateString(),
-            ])
-            ->sum('amount');
+        $monthlyExpense = (float) $this->applyExpenseAreaScope(
+            Expense::query()
+                ->where('status', 'posted')
+                ->whereBetween('expense_date', [
+                    $monthStart->toDateString(),
+                    $monthEnd->toDateString(),
+                ])
+        )->sum('amount');
 
         $netProfit = $monthlyIncome - $monthlyExpense;
 
-        $pendingInvoiceQuery = Invoice::query()
-            ->whereDate('billing_date', '<=', $today)
-            ->whereIn('status', ['unpaid', 'isolated']);
+        $pendingInvoiceQuery = $this->applyInvoiceAreaScope(
+            Invoice::query()
+                ->whereDate('billing_date', '<=', $today)
+                ->whereIn('status', ['unpaid', 'isolated'])
+        );
 
         $pendingRevenue = (float) (clone $pendingInvoiceQuery)->sum('amount');
         $pendingInvoiceCount = (int) (clone $pendingInvoiceQuery)->count();

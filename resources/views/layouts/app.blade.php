@@ -27,85 +27,162 @@
 
 <body class="min-h-screen bg-slate-100 text-slate-800 antialiased transition-colors duration-300 dark:bg-slate-950 dark:text-slate-100">
 @php
-    $navItems = [
-        [
-            'label' => 'Dashboard',
-            'href' => route('dashboard'),
-            'active' => request()->routeIs('dashboard'),
-            'icon' => 'https://img.icons8.com/color/48/dashboard-layout.png',
-            'tone' => 'sky',
-        ],
-        [
-            'label' => 'Pelanggan',
-            'href' => route('customers.index'),
-            'active' => request()->routeIs('customers.*'),
-            'icon' => 'https://img.icons8.com/color/48/conference-call.png',
-            'tone' => 'emerald',
-        ],
-        [
-            'label' => 'Paket Internet',
-            'href' => route('packages.index'),
-            'active' => request()->routeIs('packages.*'),
-            'icon' => 'https://img.icons8.com/color/48/package.png',
-            'tone' => 'violet',
-        ],
-        [
-            'label' => 'MikroTik',
-            'href' => route('routers.index'),
-            'active' => request()->routeIs('routers.*'),
-            'icon' => 'https://img.icons8.com/color/48/wifi-router.png',
-            'tone' => 'amber',
-        ],
-        [
-            'label' => 'Pembayaran',
-            'href' => route('invoices.index'),
-            'active' => request()->routeIs('invoices.index') || request()->routeIs('invoices.show') || request()->routeIs('invoices.print'),
-            'icon' => 'https://img.icons8.com/color/48/bill.png',
-            'tone' => 'rose',
-        ],
-        [
-            'label' => 'Buat Tagihan',
-            'href' => route('invoices.create-page'),
-            'active' => request()->routeIs('invoices.create-page') || request()->routeIs('invoices.generate.manual') || request()->routeIs('invoices.generate.mass'),
-            'icon' => 'https://img.icons8.com/color/48/add-file.png',
-            'tone' => 'pink',
-        ],
-        [
-            'label' => 'Titip Saldo',
-            'href' => route('billing.credit-balance'),
-            'active' => request()->routeIs('billing.credit-balance'),
-            'icon' => 'https://img.icons8.com/color/48/money-transfer.png',
-            'tone' => 'pink',
-        ],
-        [
-            'label' => 'Pengeluaran',
-            'href' => route('expenses.index'),
-            'active' => request()->routeIs('expenses.*'),
-            'icon' => 'https://img.icons8.com/color/48/wallet.png',
-            'tone' => 'orange',
-        ],
-        [
-            'label' => 'Manajemen User',
-            'href' => url('/users'),
-            'active' => request()->is('users*'),
-            'icon' => 'https://img.icons8.com/color/48/admin-settings-male.png',
-            'tone' => 'indigo',
-        ],
-        [
-            'label' => 'Pengaturan Billing',
-            'href' => route('settings.billing.edit'),
-            'active' => request()->routeIs('settings.billing.*'),
-            'icon' => 'https://img.icons8.com/color/48/settings.png',
-            'tone' => 'indigo',
-        ],
-    ];
+    $currentUser = auth()->user();
+    $isSuperAdmin = $currentUser?->isSuperAdmin() ?? false;
 
-    $sections = [
-        ['title' => null, 'items' => [$navItems[0]]],
-        ['title' => 'Master Data', 'items' => array_slice($navItems, 1, 3)],
-        ['title' => 'Billing', 'items' => array_slice($navItems, 4, 4)],
-        ['title' => 'Administrasi', 'items' => array_slice($navItems, 8, 2)],
-    ];
+    if ($isSuperAdmin) {
+        $navItems = [
+            [
+                'label' => 'Dashboard',
+                'href' => route('dashboard'),
+                'active' => request()->routeIs('dashboard'),
+                'icon' => 'https://img.icons8.com/color/48/dashboard-layout.png',
+                'tone' => 'sky',
+            ],
+            [
+                'label' => 'Pelanggan',
+                'href' => route('customers.index'),
+                'active' => request()->routeIs('customers.*'),
+                'icon' => 'https://img.icons8.com/color/48/conference-call.png',
+                'tone' => 'emerald',
+            ],
+            [
+                'label' => 'Paket Internet',
+                'href' => route('packages.index'),
+                'active' => request()->routeIs('packages.*'),
+                'icon' => 'https://img.icons8.com/color/48/package.png',
+                'tone' => 'violet',
+            ],
+            [
+                'label' => 'MikroTik',
+                'href' => route('routers.index'),
+                'active' => request()->routeIs('routers.*'),
+                'icon' => 'https://img.icons8.com/color/48/wifi-router.png',
+                'tone' => 'amber',
+            ],
+            [
+                'label' => 'Pembayaran',
+                'href' => route('invoices.index'),
+                'active' => request()->routeIs('invoices.index') || request()->routeIs('invoices.show') || request()->routeIs('invoices.print'),
+                'icon' => 'https://img.icons8.com/color/48/bill.png',
+                'tone' => 'rose',
+            ],
+            [
+                'label' => 'Buat Tagihan',
+                'href' => route('invoices.create-page'),
+                'active' => request()->routeIs('invoices.create-page') || request()->routeIs('invoices.generate.manual') || request()->routeIs('invoices.generate.mass'),
+                'icon' => 'https://img.icons8.com/color/48/add-file.png',
+                'tone' => 'pink',
+            ],
+            [
+                'label' => 'Titip Saldo',
+                'href' => route('billing.credit-balance'),
+                'active' => request()->routeIs('billing.credit-balance'),
+                'icon' => 'https://img.icons8.com/color/48/money-transfer.png',
+                'tone' => 'pink',
+            ],
+            [
+                'label' => 'Pengeluaran',
+                'href' => route('expenses.index'),
+                'active' => request()->routeIs('expenses.*'),
+                'icon' => 'https://img.icons8.com/color/48/wallet.png',
+                'tone' => 'orange',
+            ],
+            [
+                'label' => 'Manajemen User',
+                'href' => url('/users'),
+                'active' => request()->is('users*'),
+                'icon' => 'https://img.icons8.com/color/48/admin-settings-male.png',
+                'tone' => 'indigo',
+            ],
+            [
+                'label' => 'Wilayah Operasional',
+                'href' => route('areas.index'),
+                'active' => request()->routeIs('areas.*'),
+                'icon' => 'https://img.icons8.com/color/48/marker.png',
+                'tone' => 'violet',
+            ],
+            [
+                'label' => 'Pengaturan Billing',
+                'href' => route('settings.billing.edit'),
+                'active' => request()->routeIs('settings.billing.*'),
+                'icon' => 'https://img.icons8.com/color/48/settings.png',
+                'tone' => 'indigo',
+            ],
+        ];
+
+        $sections = [
+            ['title' => null, 'items' => [$navItems[0]]],
+            ['title' => 'Master Data', 'items' => array_slice($navItems, 1, 3)],
+            ['title' => 'Billing', 'items' => array_slice($navItems, 4, 4)],
+            ['title' => 'Administrasi', 'items' => array_slice($navItems, 8, 3)],
+        ];
+    } elseif ($currentUser?->role === 'admin') {
+        $navItems = [
+            [
+                'label' => 'Dashboard',
+                'href' => route('admin.dashboard'),
+                'active' => request()->routeIs('admin.dashboard'),
+                'icon' => 'https://img.icons8.com/color/48/dashboard-layout.png',
+                'tone' => 'sky',
+            ],
+            [
+                'label' => 'Pelanggan',
+                'href' => route('customers.index'),
+                'active' => request()->routeIs('customers.*'),
+                'icon' => 'https://img.icons8.com/color/48/conference-call.png',
+                'tone' => 'emerald',
+            ],
+            [
+                'label' => 'Paket Internet',
+                'href' => route('packages.index'),
+                'active' => request()->routeIs('packages.*'),
+                'icon' => 'https://img.icons8.com/color/48/package.png',
+                'tone' => 'violet',
+            ],
+            [
+                'label' => 'Invoice',
+                'href' => route('invoices.index'),
+                'active' => request()->routeIs('invoices.*'),
+                'icon' => 'https://img.icons8.com/color/48/bill.png',
+                'tone' => 'amber',
+            ],
+            [
+                'label' => 'Titip Saldo',
+                'href' => route('billing.credit-balance'),
+                'active' => request()->routeIs('billing.credit-balance'),
+                'icon' => 'https://img.icons8.com/color/48/wallet.png',
+                'tone' => 'cyan',
+            ],
+            [
+                'label' => 'Pengeluaran',
+                'href' => route('expenses.index'),
+                'active' => request()->routeIs('expenses.*'),
+                'icon' => 'https://img.icons8.com/color/48/money-bag.png',
+                'tone' => 'rose',
+            ],
+        ];
+
+        $sections = [
+            ['title' => null, 'items' => [$navItems[0]]],
+            ['title' => 'Master Data', 'items' => array_slice($navItems, 1, 2)],
+            ['title' => 'Billing', 'items' => array_slice($navItems, 3, 3)],
+        ];
+    } else {
+        $navItems = [
+            [
+                'label' => 'Dashboard Operasional',
+                'href' => route('staff.home'),
+                'active' => request()->routeIs('staff.home'),
+                'icon' => 'https://img.icons8.com/color/48/dashboard-layout.png',
+                'tone' => 'sky',
+            ],
+        ];
+
+        $sections = [
+            ['title' => null, 'items' => $navItems],
+        ];
+    }
 @endphp
 
 <div class="flex min-h-screen">

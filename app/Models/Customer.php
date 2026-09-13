@@ -10,6 +10,7 @@ class Customer extends Model
 {
     protected $fillable = [
         'router_id',
+        'area_id',
         'internet_package_id',
         'monthly_price_override',
         'tax_mode',
@@ -37,6 +38,11 @@ class Customer extends Model
     public function router(): BelongsTo
     {
         return $this->belongsTo(Router::class);
+    }
+
+    public function area(): BelongsTo
+    {
+        return $this->belongsTo(Area::class);
     }
 
     public function internetPackage(): BelongsTo

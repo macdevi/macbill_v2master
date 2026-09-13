@@ -35,8 +35,15 @@ class InvoiceController extends Controller
             $period = '';
         }
 
+        $user = $request->user();
+
         $invoices = Invoice::query()
             ->with('customer')
+            ->when($user?->role === 'admin', function ($query) use ($user) {
+                $query->whereHas('customer', function ($customerQuery) use ($user) {
+                    $customerQuery->whereIn('area_id', $user->activeAreaIds());
+                });
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $normalizedAmount = preg_replace('/[^0-9.]/', '', str_replace(',', '.', $search));
 
@@ -87,27 +94,49 @@ class InvoiceController extends Controller
 
     public function createPage()
     {
+        $user = request()->user();
+
         return view('invoices.create', [
-            'customers' => Customer::orderBy('name')->get(['id', 'name', 'customer_code']),
+            'customers' => Customer::query()
+                ->when($user?->role === 'admin', function ($query) use ($user) {
+                    $query->whereIn('area_id', $user->activeAreaIds());
+                })
+                ->orderBy('name')
+                ->get(['id', 'name', 'customer_code']),
         ]);
     }
 
     public function creditBalancePage()
     {
+        $user = request()->user();
+
+        abort_unless(
+            in_array($user?->role, ['super_admin', 'admin'], true),
+            403,
+            'Anda tidak memiliki akses ke fitur titip saldo.'
+        );
+
         return view('invoices.credit-balance', [
-            'customers' => Customer::orderBy('name')->get([
-                'id',
-                'name',
-                'customer_code',
-                'phone',
-                'credit_balance',
-                'status',
-            ]),
+            'customers' => Customer::query()
+                ->when($user?->role === 'admin', function ($query) use ($user) {
+                    $query->whereIn('area_id', $user->activeAreaIds());
+                })
+                ->orderBy('name')
+                ->get([
+                    'id',
+                    'name',
+                    'customer_code',
+                    'phone',
+                    'credit_balance',
+                    'status',
+                ]),
         ]);
     }
 
     public function show(Invoice $invoice)
     {
+        $this->authorizeInvoiceArea($invoice);
+
         $invoice->load(['customer', 'payments']);
 
         return view('invoices.show', compact('invoice'));
@@ -115,6 +144,8 @@ class InvoiceController extends Controller
 
     public function pay(Invoice $invoice)
     {
+        $this->authorizeInvoiceArea($invoice);
+
         $invoice->load(['customer', 'payments']);
 
         return view('invoices.pay', compact('invoice'));
@@ -122,6 +153,8 @@ class InvoiceController extends Controller
 
     public function print(Invoice $invoice)
     {
+        $this->authorizeInvoiceArea($invoice);
+
         $invoice->load('customer');
 
         return view('invoices.print', compact('invoice'));
@@ -141,6 +174,9 @@ class InvoiceController extends Controller
         ]);
 
         $customer = Customer::with('internetPackage')->findOrFail($data['customer_id']);
+
+        $this->authorizeCustomerAreaForInvoice($customer);
+
         $billingMonth = Carbon::createFromFormat('!Y-m', $data['billing_period']);
         $period = $billingMonth->format('Ym');
 
@@ -180,6 +216,8 @@ class InvoiceController extends Controller
 
     public function generateMass(Request $request, BillingTaxService $billingTax)
     {
+        $this->authorizeSuperAdmin();
+
         $data = $request->validate([
             'billing_period' => ['required', 'date_format:Y-m', 'before_or_equal:' . now()->format('Y-m')],
         ], [
@@ -245,6 +283,47 @@ class InvoiceController extends Controller
         return redirect()
             ->route('invoices.index', ['period' => $data['billing_period']])
             ->with('success', $message);
+    }
+
+    private function authorizeSuperAdmin(): void
+    {
+        abort_unless(
+            request()->user()?->role === 'super_admin',
+            403,
+            'Hanya Super Admin yang dapat mengakses fitur ini.'
+        );
+    }
+
+    private function authorizeCustomerAreaForInvoice(Customer $customer): void
+    {
+        $user = request()->user();
+
+        if ($user?->role !== 'admin') {
+            return;
+        }
+
+        abort_unless(
+            in_array((int) $customer->area_id, $user->activeAreaIds(), true),
+            403,
+            'Anda tidak memiliki akses untuk membuat invoice pelanggan di luar area penugasan.'
+        );
+    }
+
+    private function authorizeInvoiceArea(Invoice $invoice): void
+    {
+        $user = request()->user();
+
+        if ($user?->role !== 'admin') {
+            return;
+        }
+
+        $invoice->loadMissing('customer');
+
+        abort_unless(
+            in_array((int) $invoice->customer->area_id, $user->activeAreaIds(), true),
+            403,
+            'Anda tidak memiliki akses ke invoice di luar area penugasan.'
+        );
     }
 
     private function createInvoiceWithCreditBalance(

@@ -75,6 +75,26 @@
 
     <label class="block">
         <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Wilayah Operasional
+        </span>
+        <select name="area_id"
+                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100 @error('area_id') border-rose-400 @enderror dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-violet-400 dark:focus:ring-violet-500/20"
+                required>
+            <option value="">Pilih wilayah operasional</option>
+            @foreach ($areas as $area)
+                <option value="{{ $area->id }}"
+                    @selected(old('area_id', $customer->area_id ?? '') == $area->id)>
+                    {{ $area->name }} — {{ $area->code }}
+                </option>
+            @endforeach
+        </select>
+        @error('area_id')
+            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
+        @enderror
+    </label>
+
+    <label class="block">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
             Router
         </span>
         <select name="router_id"

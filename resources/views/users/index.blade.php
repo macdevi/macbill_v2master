@@ -64,6 +64,22 @@
                         <p class="mt-1 truncate text-sm text-slate-500 dark:text-slate-400" title="{{ $u->username ?? '-' }}">
                             {{ $u->username ? '@' . $u->username : 'Username belum diatur' }}
                         </p>
+
+                        @if($u->isSuperAdmin())
+                            <p class="mt-2 text-xs font-semibold text-violet-600 dark:text-violet-300">
+                                Akses seluruh wilayah
+                            </p>
+                        @elseif($u->areas->isNotEmpty())
+                            <p class="mt-2 truncate text-xs font-semibold text-slate-500 dark:text-slate-400"
+                               title="{{ $u->areas->pluck('name')->join(', ') }}">
+                                {{ $u->areas->count() }} wilayah · {{ $u->areas->pluck('name')->join(', ') }}
+                            </p>
+                        @else
+                            <p class="mt-2 text-xs font-semibold text-amber-600 dark:text-amber-300">
+                                Belum ada wilayah
+                            </p>
+                        @endif
+
                     </div>
                 </div>
 

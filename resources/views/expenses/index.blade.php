@@ -125,7 +125,7 @@
         </form>
     </details>
 
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="divide-y divide-slate-100 dark:divide-slate-800">
             @forelse($expenses as $expense)
                 <article class="relative p-4 transition hover:bg-cyan-50/40 dark:hover:bg-cyan-400/[0.03]">
@@ -189,30 +189,26 @@
                             @endif
                         </div>
 
-                        <details class="absolute right-3 top-3">
-                            <summary class="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-lg text-lg font-bold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200">
-                                ⋮
-                            </summary>
-                            <div class="absolute right-0 z-40 mt-1 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                                @if($expense->status === 'posted')
-                                    <a href="{{ route('expenses.edit', $expense) }}"
-                                       class="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">
-                                        Edit
-                                    </a>
-                                    <form method="POST" action="{{ route('expenses.destroy', $expense) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                onclick="return confirm('Batalkan pengeluaran ini? Data tetap tersimpan sebagai riwayat dan tidak lagi dihitung sebagai pengeluaran aktif.')"
-                                                class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">
-                                            Batalkan
-                                        </button>
-                                    </form>
-                                @else
-                                    <div class="px-3 py-2.5 text-xs font-semibold text-slate-400">Tidak ada aksi</div>
-                                @endif
+                        
+                        @if($expense->status === 'posted')
+                            <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                                <a href="{{ route('expenses.edit', $expense) }}"
+                                   class="inline-flex items-center justify-center rounded-lg bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100 focus:outline-none focus:ring-4 focus:ring-cyan-200/60 dark:bg-cyan-400/10 dark:text-cyan-300 dark:hover:bg-cyan-400/20 dark:focus:ring-cyan-400/15">
+                                    Edit
+                                </a>
+
+                                <form method="POST" action="{{ route('expenses.destroy', $expense) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            onclick="return confirm('Batalkan pengeluaran ini? Data tetap tersimpan sebagai riwayat dan tidak lagi dihitung sebagai pengeluaran aktif.')"
+                                            class="inline-flex items-center justify-center rounded-lg bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 focus:outline-none focus:ring-4 focus:ring-rose-200/60 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20 dark:focus:ring-rose-400/15">
+                                        Batalkan
+                                    </button>
+                                </form>
                             </div>
-                        </details>
+                        @endif
+
                     </div>
                 </article>
             @empty

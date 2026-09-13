@@ -24,9 +24,15 @@
         <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
             <p class="font-bold">Import belum dapat diproses:</p>
             <ul class="mt-2 list-disc space-y-1 pl-5">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                <li>Gunakan template agar header kolom sesuai.</li>
+                <li>Pilih <strong>Wilayah Tujuan Import</strong>; seluruh pelanggan dalam file akan disimpan ke wilayah tersebut.</li>
+                <li>Router dan package harus sama persis dengan nama router/paket yang aktif.</li>
+                <li><strong>monthly_price_override</strong> opsional; kosongkan untuk memakai harga paket, atau isi angka Rupiah tanpa pemisah, misalnya <code>150000</code>.</li>
+                <li><strong>tax_mode</strong> wajib diisi dengan salah satu nilai: <code>none</code>, <code>inclusive</code>, atau <code>exclusive</code>.</li>
+                <li>Password PPPoE minimal enam karakter dan tidak boleh hanya berupa tanda bintang.</li>
+                <li>Username PPPoE yang sudah ada atau duplikat dalam file akan dilewati.</li>
+                <li>Pelanggan berhasil import mendapat status <strong>Belum Push</strong>.</li>
+                <li>Import ini tidak membuat atau mengubah PPPoE secret di MikroTik.</li>
             </ul>
         </div>
     @endif
@@ -47,7 +53,10 @@
             <p class="font-bold">Aturan import</p>
             <ul class="mt-2 list-disc space-y-1 pl-5">
                 <li>Gunakan template agar header kolom sesuai.</li>
+                <li>Pilih <strong>Wilayah Tujuan Import</strong>; seluruh pelanggan dalam file akan disimpan ke wilayah tersebut.</li>
                 <li>Router dan package harus sama persis dengan nama router/paket yang aktif.</li>
+                <li><strong>monthly_price_override</strong> opsional; kosongkan untuk memakai harga paket, atau isi angka Rupiah tanpa pemisah, misalnya <code>150000</code>.</li>
+                <li><strong>tax_mode</strong> wajib diisi dengan salah satu nilai: <code>none</code>, <code>inclusive</code>, atau <code>exclusive</code>.</li>
                 <li>Password PPPoE minimal enam karakter dan tidak boleh hanya berupa tanda bintang.</li>
                 <li>Username PPPoE yang sudah ada atau duplikat dalam file akan dilewati.</li>
                 <li>Pelanggan berhasil import mendapat status <strong>Belum Push</strong>.</li>
@@ -60,6 +69,28 @@
               enctype="multipart/form-data"
               class="space-y-5">
             @csrf
+
+              <label class="block">
+                <span class="text-sm font-bold text-slate-700 dark:text-slate-200">
+                    Wilayah Tujuan Import <span class="text-rose-500">*</span>
+                </span>
+
+                <select name="area_id"
+                        required
+                        class="mt-2 block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+                    <option value="">Pilih wilayah tujuan import</option>
+                    @foreach($areas as $area)
+                        <option value="{{ $area->id }}"
+                                @selected((string) old('area_id') === (string) $area->id)>
+                            {{ $area->code }} — {{ $area->name }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <span class="mt-2 block text-xs text-slate-400">
+                    Semua pelanggan dalam file akan disimpan ke wilayah yang dipilih.
+                </span>
+            </label>
 
             <label class="block">
                 <span class="text-sm font-bold text-slate-700 dark:text-slate-200">

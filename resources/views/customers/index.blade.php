@@ -81,7 +81,7 @@
         </div>
     @endif
 
-    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section class="relative overflow-visible rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="border-b border-slate-100 p-4 dark:border-slate-800">
             <div class="mb-3 flex items-center justify-between gap-3">
                 <div>

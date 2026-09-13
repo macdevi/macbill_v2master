@@ -17,6 +17,8 @@ class CustomerExcelTemplateExport implements FromCollection, WithHeadings, Shoul
             [
                 'Router Utama',
                 'Paket 10 Mbps',
+                '',
+                'exclusive',
                 'Budi Santoso',
                 '081234567890',
                 'Jl. Contoh No. 10',
@@ -33,6 +35,8 @@ class CustomerExcelTemplateExport implements FromCollection, WithHeadings, Shoul
         return [
             'router',
             'package',
+            'monthly_price_override',
+            'tax_mode',
             'name',
             'phone',
             'address',
@@ -47,19 +51,19 @@ class CustomerExcelTemplateExport implements FromCollection, WithHeadings, Shoul
     {
         $sheet->freezePane('A2');
 
-        $sheet->getStyle('A1:I1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:K1')->getFont()->setBold(true);
 
-        $sheet->getStyle('A1:I1')->getFill()
+        $sheet->getStyle('A1:K1')->getFill()
             ->setFillType('solid')
             ->getStartColor()
             ->setRGB('06B6D4');
 
-        $sheet->getStyle('A1:I1')->getFont()
+        $sheet->getStyle('A1:K1')->getFont()
             ->getColor()
             ->setRGB('0F172A');
 
-        $sheet->getStyle('D:D')->getNumberFormat()->setFormatCode('@');
-        $sheet->getStyle('F:G')->getNumberFormat()->setFormatCode('@');
+        $sheet->getStyle('F:F')->getNumberFormat()->setFormatCode('@');
+        $sheet->getStyle('H:I')->getNumberFormat()->setFormatCode('@');
 
         return [];
     }

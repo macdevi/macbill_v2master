@@ -29,6 +29,7 @@ class Expense extends Model
 
     protected $fillable = [
         'created_by',
+        'area_id',
         'title',
         'category',
         'description',
@@ -49,6 +50,14 @@ class Expense extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * NULL menandakan biaya global yang nantinya hanya dapat dilihat superadmin.
+     */
+    public function area(): BelongsTo
+    {
+        return $this->belongsTo(Area::class);
     }
 
     public function scopePosted($query)

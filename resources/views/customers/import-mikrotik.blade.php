@@ -54,6 +54,27 @@
                 @enderror
             </div>
 
+            <div class="mt-5">
+                <label for="area_id" class="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-200">
+                    Wilayah Tujuan
+                </label>
+                <select id="area_id" name="area_id" required
+                        class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100 @error('area_id') border-rose-400 @enderror dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                    <option value="">Pilih wilayah tujuan import</option>
+                    @foreach($areas as $area)
+                        <option value="{{ $area->id }}" @selected(old('area_id') == $area->id)>
+                            {{ $area->name }} — {{ $area->code }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('area_id')
+                    <p class="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">{{ $message }}</p>
+                @enderror
+                <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                    Semua pelanggan pada batch ini akan disimpan ke wilayah yang dipilih.
+                </p>
+            </div>
+
             <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
                 <strong>Catatan:</strong> Username PPPoE hanya menjadi identitas koneksi. Nama pelanggan wajib diisi manual pada halaman konfirmasi berikutnya.
             </div>

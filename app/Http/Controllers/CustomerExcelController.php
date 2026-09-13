@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\CustomerExcelExport;
 use App\Exports\CustomerExcelTemplateExport;
 use App\Imports\CustomerExcelImport;
+use App\Models\Area;
 use App\Models\Customer;
 use App\Models\InternetPackage;
 use App\Models\Router;
@@ -31,16 +32,43 @@ class CustomerExcelController extends Controller
         );
     }
 
-    public function importForm()
+    public function importForm(Request $request)
     {
-        return view('customers.import-excel');
+        $user = $request->user();
+
+        $areas = Area::query()
+            ->where('active', true)
+            ->when(! $user?->isSuperAdmin(), function ($query) use ($user) {
+                $query->whereIn('id', $user?->activeAreaIds() ?? []);
+            })
+            ->orderBy('name')
+            ->get(['id', 'code', 'name']);
+
+        return view('customers.import-excel', compact('areas'));
     }
 
     public function importStore(Request $request)
     {
-        $request->validate([
+        $user = $request->user();
+
+        $data = $request->validate([
+            'area_id' => ['required', 'integer', 'exists:areas,id'],
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+        ], [
+            'area_id.required' => 'Wilayah tujuan import wajib dipilih.',
+            'area_id.exists' => 'Wilayah tujuan import tidak ditemukan.',
         ]);
+
+        $area = Area::query()
+            ->where('active', true)
+            ->findOrFail($data['area_id']);
+
+        abort_unless(
+            $user?->isSuperAdmin()
+                || $user?->activeAreaIds()->contains((int) $area->id),
+            403,
+            'Wilayah tujuan import bukan wilayah penugasan Anda.'
+        );
 
         $import = new CustomerExcelImport();
 
@@ -71,6 +99,8 @@ class CustomerExcelController extends Controller
         $requiredColumns = [
             'router',
             'package',
+            'monthly_price_override',
+            'tax_mode',
             'name',
             'phone',
             'address',
@@ -114,6 +144,8 @@ class CustomerExcelController extends Controller
 
             $routerName = trim((string) ($row['router'] ?? ''));
             $packageName = trim((string) ($row['package'] ?? ''));
+            $monthlyPriceOverrideRaw = trim((string) ($row['monthly_price_override'] ?? ''));
+            $taxMode = mb_strtolower(trim((string) ($row['tax_mode'] ?? '')));
             $name = trim((string) ($row['name'] ?? ''));
             $phone = trim((string) ($row['phone'] ?? ''));
             $address = trim((string) ($row['address'] ?? ''));
@@ -126,8 +158,8 @@ class CustomerExcelController extends Controller
             );
             $status = mb_strtolower(trim((string) ($row['status'] ?? 'active')));
 
-            if ($routerName === '' || $packageName === '' || $name === '' || $username === '' || $password === '' || $dueDay === false) {
-                $errors[] = 'Baris '.$excelRow.': router, package, name, pppoe_username, pppoe_password, dan due_day wajib diisi.';
+            if ($routerName === '' || $packageName === '' || $taxMode === '' || $name === '' || $username === '' || $password === '' || $dueDay === false) {
+                $errors[] = 'Baris '.$excelRow.': router, package, tax_mode, name, pppoe_username, pppoe_password, dan due_day wajib diisi.';
                 continue;
             }
 
@@ -139,6 +171,53 @@ class CustomerExcelController extends Controller
             if (mb_strlen($password) < 6 || preg_match('/^\*+$/', $password)) {
                 $errors[] = 'Baris '.$excelRow.': password PPPoE minimal 6 karakter dan tidak boleh hanya berupa tanda *.';
                 continue;
+            }
+
+            if (!in_array($taxMode, ['none', 'inclusive', 'exclusive'], true)) {
+                $errors[] = 'Baris '.$excelRow.': tax_mode harus none, inclusive, atau exclusive.';
+                continue;
+            }
+
+            $monthlyPriceOverride = null;
+            if ($monthlyPriceOverrideRaw !== '') {
+                $price = preg_replace('/\s+/', '', $monthlyPriceOverrideRaw);
+                $price = preg_replace('/^rp/i', '', $price);
+
+                $validPricePattern = '/^(?:\d+(?:[.,]\d+)?|\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d{1,3}(?:,\d{3})+(?:\.\d+)?)$/';
+
+                if (!preg_match($validPricePattern, $price)) {
+                    $errors[] = 'Baris '.$excelRow.': monthly_price_override harus kosong atau nominal angka yang valid.';
+                    continue;
+                }
+
+                $lastComma = strrpos($price, ',');
+                $lastDot = strrpos($price, '.');
+
+                if ($lastComma !== false && $lastDot !== false) {
+                    if ($lastComma > $lastDot) {
+                        $price = str_replace('.', '', $price);
+                        $price = str_replace(',', '.', $price);
+                    } else {
+                        $price = str_replace(',', '', $price);
+                    }
+                } elseif ($lastComma !== false) {
+                    $afterComma = strlen($price) - $lastComma - 1;
+                    $price = $afterComma === 3
+                        ? str_replace(',', '', $price)
+                        : str_replace(',', '.', $price);
+                } elseif ($lastDot !== false) {
+                    $afterDot = strlen($price) - $lastDot - 1;
+                    $price = $afterDot === 3
+                        ? str_replace('.', '', $price)
+                        : $price;
+                }
+
+                if (!is_numeric($price) || (float) $price < 0) {
+                    $errors[] = 'Baris '.$excelRow.': monthly_price_override harus kosong atau angka nol/positif.';
+                    continue;
+                }
+
+                $monthlyPriceOverride = (float) $price;
             }
 
             if (!in_array($status, ['active', 'inactive'], true)) {
@@ -173,8 +252,11 @@ class CustomerExcelController extends Controller
             $seenUsernames[$usernameKey] = true;
 
             $validRows[] = [
+                'area_id' => $area->id,
                 'router_id' => $routers[$routerKey]->id,
                 'internet_package_id' => $packages[$packageKey]->id,
+                'monthly_price_override' => $monthlyPriceOverride,
+                'tax_mode' => $taxMode,
                 'customer_code' => 'CUST-'.strtoupper(Str::random(8)),
                 'name' => $name,
                 'phone' => $phone !== '' ? $phone : null,
@@ -199,7 +281,7 @@ class CustomerExcelController extends Controller
             }
         });
 
-        $message = count($validRows).' pelanggan berhasil diimpor tanpa push ke MikroTik.';
+        $message = count($validRows).' pelanggan berhasil diimpor ke wilayah '.$area->name.' tanpa push ke MikroTik.';
 
         return redirect()
             ->route('customers.index')

@@ -12,6 +12,8 @@ class PaymentController extends Controller
 {
     public function store(Request $request, Invoice $invoice)
     {
+        $this->authorizeInvoiceAreaForPayment($invoice);
+
         $data = $request->validate([
             'method' => ['required', 'in:cash,bank_transfer'],
             'amount' => ['required', 'numeric', 'min:1'],
@@ -174,4 +176,28 @@ class PaymentController extends Controller
 
         return back()->with('success', 'Pembayaran ditolak.');
     }
+
+    private function authorizeInvoiceAreaForPayment(Invoice $invoice): void
+    {
+        $user = request()->user();
+
+        if ($user?->isSuperAdmin()) {
+            return;
+        }
+
+        abort_unless(
+            in_array($user?->role, ['admin', 'kasir'], true),
+            403,
+            'Anda tidak memiliki akses untuk mencatat pembayaran.'
+        );
+
+        $invoice->loadMissing('customer');
+
+        abort_unless(
+            in_array((int) $invoice->customer->area_id, $user->activeAreaIds(), true),
+            403,
+            'Anda tidak memiliki akses ke invoice di luar area penugasan.'
+        );
+    }
+
 }

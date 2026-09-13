@@ -25,6 +25,14 @@
         <form method="POST" action="{{ route('customers.import.mikrotik.store') }}">
             @csrf
             <input type="hidden" name="router_id" value="{{ $router->id }}">
+            <input type="hidden" name="area_id" value="{{ $area->id }}">
+
+            <div class="mb-5 flex flex-wrap items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm font-semibold text-violet-800 dark:border-violet-400/20 dark:bg-violet-400/10 dark:text-violet-200">
+                <span class="text-violet-500" aria-hidden="true">⌖</span>
+                Wilayah tujuan:
+                <span class="font-black">{{ $area->name }}</span>
+                <span class="font-mono text-xs opacity-75">{{ $area->code }}</span>
+            </div>
 
             @error('customers')
                 <div class="mb-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-300">
