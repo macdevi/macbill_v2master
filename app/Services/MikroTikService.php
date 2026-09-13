@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Services;
+
 use App\Models\Customer;
 use App\Models\InternetPackage;
 use App\Models\Router;
@@ -22,16 +24,28 @@ class MikroTikService
 
     public function testConnection(Router $router): bool
     {
-        return count($this->client($router)->query('/system/identity/print')->read()) > 0;
+        return count(
+            $this->client($router)
+                ->query('/system/identity/print')
+                ->read()
+        ) > 0;
     }
 
     public function onlineUsers(Router $router): array
     {
-        return $this->client($router)->query('/ppp/active/print')->read();
+        return $this->client($router)
+            ->query('/ppp/active/print')
+            ->read();
     }
 
     private function secret(Router $router, string $username): ?array
     {
+        $username = trim($username);
+
+        if ($username === '') {
+            return null;
+        }
+
         $query = (new Query('/ppp/secret/print'))
             ->where('name', $username);
 
@@ -40,37 +54,85 @@ class MikroTikService
         return $rows[0] ?? null;
     }
 
+    private function secretByCustomerId(Router $router, int $customerId): ?array
+    {
+        $query = (new Query('/ppp/secret/print'))
+            ->where('comment', 'macbilling_v2 customer #'.$customerId);
+
+        $rows = $this->client($router)->query($query)->read();
+
+        return $rows[0] ?? null;
+    }
+
+    private function ensureCustomerPppoeData(Customer $customer): void
+    {
+        $customer->loadMissing('internetPackage');
+
+        if (! $customer->internetPackage) {
+            throw new RuntimeException('Paket internet pelanggan tidak ditemukan.');
+        }
+
+        if (blank($customer->pppoe_username)) {
+            throw new RuntimeException('Username PPPoE pelanggan belum diisi.');
+        }
+
+        if (blank($customer->pppoe_password)) {
+            throw new RuntimeException('Password PPPoE pelanggan belum diisi.');
+        }
+
+        if (blank($customer->internetPackage->mikrotik_profile)) {
+            throw new RuntimeException('MikroTik profile pada paket internet belum diisi.');
+        }
+    }
+
     public function createPppoeSecret(Router $router, Customer $customer): array
     {
+        $this->ensureCustomerPppoeData($customer);
+
         $query = (new Query('/ppp/secret/add'))
-            ->equal('name', $customer->pppoe_username)
+            ->equal('name', trim($customer->pppoe_username))
             ->equal('password', $customer->pppoe_password)
             ->equal('service', 'pppoe')
             ->equal('profile', $customer->internetPackage->mikrotik_profile)
+            ->equal('disabled', 'no')
             ->equal('comment', 'macbilling_v2 customer #'.$customer->id);
+
         return $this->client($router)->query($query)->read();
     }
 
     public function updatePppoeSecret(Router $router, Customer $customer): array
     {
-        $secret = $this->secret($router, $customer->pppoe_username);
-        if (!$secret) return $this->createPppoeSecret($router, $customer);
+        $this->ensureCustomerPppoeData($customer);
+
+        /*
+         * Cari berdasarkan comment agar perubahan username PPPoE
+         * tidak membuat secret lama tertinggal di MikroTik.
+         */
+        $secret = $this->secretByCustomerId($router, $customer->id);
+
+        if (! $secret) {
+            $secret = $this->secret($router, $customer->pppoe_username);
+        }
+
+        if (! $secret) {
+            return $this->createPppoeSecret($router, $customer);
+        }
+
         $query = (new Query('/ppp/secret/set'))
             ->equal('.id', $secret['.id'])
-            ->equal('name', $customer->pppoe_username)
+            ->equal('name', trim($customer->pppoe_username))
+            ->equal('password', $customer->pppoe_password)
             ->equal('service', 'pppoe')
             ->equal('profile', $customer->internetPackage->mikrotik_profile)
-            ->equal('disabled', 'no');
+            ->equal('disabled', 'no')
+            ->equal('comment', 'macbilling_v2 customer #'.$customer->id);
 
-        if (!empty($customer->pppoe_password)) {
-            $query->equal('password', $customer->pppoe_password);
-        }
         return $this->client($router)->query($query)->read();
     }
 
     public function isolate(Customer $customer): array
     {
-        $customer->loadMissing('router');
+        $customer->loadMissing(['router', 'internetPackage']);
 
         if (! $customer->router) {
             throw new RuntimeException('Router pelanggan tidak ditemukan.');
@@ -84,13 +146,25 @@ class MikroTikService
             );
         }
 
+        if (blank($customer->pppoe_username)) {
+            throw new RuntimeException('Username PPPoE pelanggan belum diisi.');
+        }
+
         $client = $this->client($customer->router);
 
-        $secretQuery = (new Query('/ppp/secret/print'))
-            ->where('name', $customer->pppoe_username);
+        /*
+         * Utamakan pencarian comment agar username yang pernah berubah
+         * tetap mengarah ke PPPoE secret milik pelanggan yang sama.
+         */
+        $secret = $this->secretByCustomerId($customer->router, $customer->id);
 
-        $secrets = $client->query($secretQuery)->read();
-        $secret = $secrets[0] ?? null;
+        if (! $secret) {
+            $secretQuery = (new Query('/ppp/secret/print'))
+                ->where('name', trim($customer->pppoe_username));
+
+            $secrets = $client->query($secretQuery)->read();
+            $secret = $secrets[0] ?? null;
+        }
 
         if (! $secret) {
             throw new RuntimeException('PPPoE secret tidak ditemukan di MikroTik.');
@@ -98,12 +172,14 @@ class MikroTikService
 
         $isolateQuery = (new Query('/ppp/secret/set'))
             ->equal('.id', $secret['.id'])
-            ->equal('profile', $isolationProfile);
+            ->equal('profile', $isolationProfile)
+            ->equal('disabled', 'no')
+            ->equal('comment', 'macbilling_v2 customer #'.$customer->id);
 
         $client->query($isolateQuery)->read();
 
         $activeQuery = (new Query('/ppp/active/print'))
-            ->where('name', $customer->pppoe_username);
+            ->where('name', $secret['name'] ?? trim($customer->pppoe_username));
 
         $activeSessions = $client->query($activeQuery)->read();
 
@@ -118,8 +194,15 @@ class MikroTikService
 
         return $activeSessions;
     }
+
     public function activate(Customer $customer): array
     {
+        $customer->loadMissing(['router', 'internetPackage']);
+
+        if (! $customer->router) {
+            throw new RuntimeException('Router pelanggan tidak ditemukan.');
+        }
+
         return $this->updatePppoeSecret($customer->router, $customer);
     }
 
@@ -131,7 +214,13 @@ class MikroTikService
             ->where('name', $package->mikrotik_profile);
 
         $profiles = $client->query($profileQuery)->read();
+
+        /*
+         * Jika hasil speed test terbalik, tukar urutan menjadi:
+         * $package->upload_speed.'M/'.$package->download_speed.'M'
+         */
         $rate = $package->download_speed.'M/'.$package->upload_speed.'M';
+
         $query = $profiles
             ? (new Query('/ppp/profile/set'))->equal('.id', $profiles[0]['.id'])
             : (new Query('/ppp/profile/add'));
@@ -168,6 +257,4 @@ class MikroTikService
             ->query('/ppp/secret/print')
             ->read();
     }
-
-
 }
