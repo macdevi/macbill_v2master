@@ -116,9 +116,9 @@
         </span>
         <span class="font-semibold">
             @if ($hasFilter)
-                {{ $invoices->total() }} ditemukan
+                {{ $invoices->count() }} ditemukan
             @else
-                {{ $invoices->total() }} total
+                {{ $invoices->count() }} total
             @endif
         </span>
     </div>
@@ -446,11 +446,6 @@
         </div>
     @endif
 
-    @if ($invoices->hasPages())
-        <div>
-            {{ $invoices->links() }}
-        </div>
-    @endif
 </div>
 
 <script>

@@ -141,7 +141,7 @@
                 'tone' => 'violet',
             ],
             [
-                'label' => 'Invoice',
+                'label' => 'Tagihan/Pembayaran',
                 'href' => route('invoices.index'),
                 'active' => request()->routeIs('invoices.*'),
                 'icon' => 'https://img.icons8.com/color/48/bill.png',

@@ -194,7 +194,7 @@ class PaymentController extends Controller
         $invoice->loadMissing('customer');
 
         abort_unless(
-            in_array((int) $invoice->customer->area_id, $user->activeAreaIds(), true),
+            $user->activeAreaIds()->contains((int) $invoice->customer->area_id),
             403,
             'Anda tidak memiliki akses ke invoice di luar area penugasan.'
         );

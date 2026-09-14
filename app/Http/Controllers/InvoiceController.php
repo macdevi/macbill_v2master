@@ -49,8 +49,8 @@ class InvoiceController extends Controller
 
                 $query->where(function ($invoiceQuery) use ($search, $normalizedAmount) {
                     $invoiceQuery
-                        ->where('invoice_number', 'like', '%' . $search . '%')
-                        ->orWhere('status', 'like', '%' . $search . '%')
+                        ->where('invoices.invoice_number', 'like', '%' . $search . '%')
+                        ->orWhere('invoices.status', 'like', '%' . $search . '%')
                         ->orWhereHas('customer', function ($customerQuery) use ($search) {
                             $customerQuery
                                 ->where('name', 'like', '%' . $search . '%')
@@ -59,29 +59,31 @@ class InvoiceController extends Controller
                         });
 
                     if ($normalizedAmount !== '' && is_numeric($normalizedAmount)) {
-                        $invoiceQuery->orWhere('amount', '=', (float) $normalizedAmount);
+                        $invoiceQuery->orWhere('invoices.amount', '=', (float) $normalizedAmount);
                     }
                 });
             })
             ->when($status !== '', function ($query) use ($status) {
-                $query->where('status', $status);
+                $query->where('invoices.status', $status);
             })
             ->when($status === '' && $tab === 'active', function ($query) {
-                $query->whereIn('status', ['unpaid', 'isolated']);
+                $query->whereIn('invoices.status', ['unpaid', 'isolated']);
             })
             ->when($status === '' && $tab === 'history', function ($query) {
-                $query->where('status', 'paid');
+                $query->where('invoices.status', 'paid');
             })
             ->when($period !== '', function ($query) use ($period) {
                 [$year, $month] = explode('-', $period);
 
                 $query
-                    ->whereYear('billing_date', (int) $year)
-                    ->whereMonth('billing_date', (int) $month);
+                    ->whereYear('invoices.billing_date', (int) $year)
+                    ->whereMonth('invoices.billing_date', (int) $month);
             })
-            ->latest()
-            ->paginate(30)
-            ->withQueryString();
+            ->join('customers', 'invoices.customer_id', '=', 'customers.id')
+            ->select('invoices.*')
+            ->orderByRaw('LOWER(customers.name) ASC')
+            ->orderBy('invoices.id')
+            ->get();
 
         return view('invoices.index', [
             'invoices' => $invoices,
@@ -303,7 +305,7 @@ class InvoiceController extends Controller
         }
 
         abort_unless(
-            in_array((int) $customer->area_id, $user->activeAreaIds(), true),
+            $user->activeAreaIds()->contains((int) $customer->area_id),
             403,
             'Anda tidak memiliki akses untuk membuat invoice pelanggan di luar area penugasan.'
         );
@@ -320,7 +322,7 @@ class InvoiceController extends Controller
         $invoice->loadMissing('customer');
 
         abort_unless(
-            in_array((int) $invoice->customer->area_id, $user->activeAreaIds(), true),
+            $user->activeAreaIds()->contains((int) $invoice->customer->area_id),
             403,
             'Anda tidak memiliki akses ke invoice di luar area penugasan.'
         );

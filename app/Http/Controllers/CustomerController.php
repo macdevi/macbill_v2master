@@ -265,7 +265,7 @@ class CustomerController extends Controller
         }
 
         abort_unless(
-            in_array((int) $customer->area_id, $user->activeAreaIds(), true),
+            $user->activeAreaIds()->contains((int) $customer->area_id),
             403,
             'Anda tidak memiliki akses ke pelanggan di wilayah ini.'
         );
