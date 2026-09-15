@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Area;
 use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -237,6 +238,102 @@ class DashboardController extends Controller
 
         $financialMonthLabel = now()->translatedFormat('F Y');
 
+        $areaFinancialSummaries = collect();
+
+        if (auth()->user()?->isSuperAdmin()) {
+            $customerCountsByArea = Customer::query()
+                ->selectRaw('area_id, COUNT(*) as customer_count')
+                ->whereNotNull('area_id')
+                ->whereIn('status', ['active', 'isolated'])
+                ->groupBy('area_id')
+                ->pluck('customer_count', 'area_id');
+
+            $incomeByArea = Payment::query()
+                ->selectRaw('customers.area_id, SUM(payments.amount) as total_income')
+                ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
+                ->join('customers', 'customers.id', '=', 'invoices.customer_id')
+                ->whereNotNull('customers.area_id')
+                ->where('payments.status', 'verified')
+                ->whereNotNull('payments.paid_at')
+                ->whereBetween('payments.paid_at', [
+                    $monthStart->copy()->startOfDay(),
+                    $monthEnd->copy()->endOfDay(),
+                ])
+                ->groupBy('customers.area_id')
+                ->pluck('total_income', 'customers.area_id');
+
+            $expenseByArea = Expense::query()
+                ->selectRaw('area_id, SUM(amount) as total_expense')
+                ->whereNotNull('area_id')
+                ->where('status', 'posted')
+                ->whereBetween('expense_date', [
+                    $monthStart->toDateString(),
+                    $monthEnd->toDateString(),
+                ])
+                ->groupBy('area_id')
+                ->pluck('total_expense', 'area_id');
+
+            $pendingByArea = Invoice::query()
+                ->selectRaw('customers.area_id, SUM(invoices.amount) as total_pending, COUNT(*) as pending_invoice_count')
+                ->join('customers', 'customers.id', '=', 'invoices.customer_id')
+                ->whereNotNull('customers.area_id')
+                ->whereDate('invoices.billing_date', '<=', $today)
+                ->whereIn('invoices.status', ['unpaid', 'isolated'])
+                ->groupBy('customers.area_id')
+                ->get()
+                ->keyBy('area_id');
+
+            $areas = Area::query()
+                ->select(['id', 'code', 'name'])
+                ->orderBy('name')
+                ->get();
+
+            $areaFinancialSummaries = $areas->map(function (Area $area) use (
+                $customerCountsByArea,
+                $incomeByArea,
+                $expenseByArea,
+                $pendingByArea
+            ): array {
+                $income = (float) ($incomeByArea[$area->id] ?? 0);
+                $expense = (float) ($expenseByArea[$area->id] ?? 0);
+                $pending = $pendingByArea->get($area->id);
+
+                return [
+                    'id' => $area->id,
+                    'code' => $area->code,
+                    'name' => $area->name,
+                    'customer_count' => (int) ($customerCountsByArea[$area->id] ?? 0),
+                    'income' => $income,
+                    'expense' => $expense,
+                    'net_profit' => $income - $expense,
+                    'pending_revenue' => (float) ($pending?->total_pending ?? 0),
+                    'pending_invoice_count' => (int) ($pending?->pending_invoice_count ?? 0),
+                ];
+            })->values();
+
+            $globalExpense = (float) Expense::query()
+                ->whereNull('area_id')
+                ->where('status', 'posted')
+                ->whereBetween('expense_date', [
+                    $monthStart->toDateString(),
+                    $monthEnd->toDateString(),
+                ])
+                ->sum('amount');
+
+            if ($globalExpense > 0) {
+                $areaFinancialSummaries->push([
+                    'id' => null,
+                    'code' => null,
+                    'name' => 'Tanpa Wilayah / Biaya Global',
+                    'customer_count' => 0,
+                    'income' => 0,
+                    'expense' => $globalExpense,
+                    'net_profit' => -$globalExpense,
+                    'pending_revenue' => 0,
+                    'pending_invoice_count' => 0,
+                ]);
+            }
+        }
         return view('dashboard', compact(
             'totalCustomers',
             'onlineCustomers',
@@ -252,6 +349,7 @@ class DashboardController extends Controller
             'pendingRevenue',
             'pendingInvoiceCount',
             'financialMonthLabel',
+            'areaFinancialSummaries',
         ));
     }
 }

@@ -3,16 +3,16 @@
 @section('title', 'Pelanggan')
 
 @section('content')
-<div class="space-y-5"
+<div class="customers-page space-y-5"
      x-data="{ detailOpen: false, detailId: null, search: '' }"
      @keydown.escape.window="detailOpen = false">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex min-w-0 items-center gap-3">
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-xl text-cyan-600 ring-1 ring-cyan-500/20 dark:bg-cyan-400/10 dark:text-cyan-300">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-xl text-cyan-700 ring-1 ring-cyan-500/20 dark:bg-cyan-400/15 dark:text-cyan-300">
                 👥
             </div>
             <div class="min-w-0">
-                <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Pelanggan</h1>
+                <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">Pelanggan</h1>
                 <p class="mt-0.5 truncate text-sm text-slate-500 dark:text-slate-400">Kelola data pelanggan dan akun PPPoE.</p>
             </div>
         </div>
@@ -24,9 +24,9 @@
                     <span>Import / Export</span>
                     <span class="text-[10px]">▼</span>
                 </summary>
-                <div class="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900">
-                    <a href="{{ route('customers.import.mikrotik') }}"
-                       class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
+
+                <div class="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
+                    <a href="{{ route('customers.import.mikrotik') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-lg dark:bg-cyan-400/15">📡</span>
                         <span class="min-w-0">
                             <span class="block">Import dari MikroTik</span>
@@ -34,24 +34,21 @@
                         </span>
                     </a>
                     <div class="my-1.5 border-t border-slate-100 dark:border-slate-800"></div>
-                    <a href="{{ route('customers.import.excel') }}"
-                       class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <a href="{{ route('customers.import.excel') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-lg text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300">↑</span>
                         <span class="min-w-0">
                             <span class="block">Import dari Excel</span>
                             <span class="mt-0.5 block truncate text-xs font-normal text-slate-400">Upload data pelanggan</span>
                         </span>
                     </a>
-                    <a href="{{ route('customers.export.excel') }}"
-                       class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
+                    <a href="{{ route('customers.export.excel') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg dark:bg-slate-800">↓</span>
                         <span class="min-w-0">
                             <span class="block">Export ke Excel</span>
                             <span class="mt-0.5 block truncate text-xs font-normal text-slate-400">Unduh seluruh data pelanggan</span>
                         </span>
                     </a>
-                    <a href="{{ route('customers.template.excel') }}"
-                       class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
+                    <a href="{{ route('customers.template.excel') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg dark:bg-slate-800">▦</span>
                         <span class="min-w-0">
                             <span class="block">Download Template Excel</span>
@@ -61,8 +58,7 @@
                 </div>
             </details>
 
-            <a href="{{ route('customers.create') }}"
-               class="inline-flex h-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-cyan-500 px-3 text-sm font-black text-slate-950 shadow-sm shadow-cyan-500/20 transition hover:bg-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-300/40">
+            <a href="{{ route('customers.create') }}" class="inline-flex h-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-cyan-500 px-3 text-sm font-black text-slate-950 shadow-sm shadow-cyan-500/20 transition hover:bg-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-300/40">
                 <span class="text-base leading-none">+</span>
                 <span class="hidden xs:inline">Tambah</span>
             </a>
@@ -81,8 +77,8 @@
         </div>
     @endif
 
-    <section class="relative overflow-visible rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div class="border-b border-slate-100 p-4 dark:border-slate-800">
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
+        <div class="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
             <div class="mb-3 flex items-center justify-between gap-3">
                 <div>
                     <h2 class="text-sm font-black text-slate-800 dark:text-slate-100">Total Pelanggan: {{ $customers->count() }}</h2>
@@ -97,23 +93,14 @@
                         <path d="m20 20-3.5-3.5"></path>
                     </svg>
                 </span>
-                <input id="customer-livefind"
-                       type="search"
-                       x-model="search"
-                       placeholder="Cari nama, kode, atau PPPoE"
-                       class="block h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-0 pl-11 pr-11 text-left text-sm font-medium text-slate-700 outline-none transition placeholder:text-left placeholder:font-normal placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-300/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-cyan-500 dark:focus:bg-slate-900 dark:focus:ring-cyan-400/15">
-                <button type="button"
-                        x-cloak
-                        x-show="search.length > 0"
-                        @click="search = ''"
-                        class="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-lg font-bold leading-none text-slate-400 transition hover:text-slate-700 focus:outline-none dark:hover:text-slate-100"
-                        aria-label="Hapus pencarian">
+                <input id="customer-livefind" type="search" x-model="search" placeholder="Cari nama, kode, atau PPPoE" class="block h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-0 pl-11 pr-11 text-sm font-medium text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-300/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-cyan-500 dark:focus:bg-slate-900 dark:focus:ring-cyan-400/15">
+                <button type="button" x-cloak x-show="search.length > 0" @click="search = ''" class="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-lg font-bold leading-none text-slate-400 transition hover:text-slate-700 focus:outline-none dark:hover:text-slate-100" aria-label="Hapus pencarian">
                     <span class="flex h-7 w-7 items-center justify-center rounded-lg transition hover:bg-slate-200 dark:hover:bg-slate-700">×</span>
                 </button>
             </div>
         </div>
 
-        <div class="space-y-3 bg-slate-50 p-3 dark:bg-slate-950/40">
+        <div class="space-y-3 bg-slate-50 p-3 dark:bg-slate-950">
             @forelse($customers as $c)
                 @php
                     $packageName = optional($c->internetPackage)->name ?: 'Belum ada paket';
@@ -121,19 +108,17 @@
                     $isActive = $c->status === 'active';
                     $isIsolated = $c->status === 'isolated';
                     $isInactive = $c->status === 'inactive';
+
+                    $customerCardClass = $isIsolated
+                        ? 'border-rose-200 bg-rose-50/50 hover:border-rose-300 dark:border-rose-500/30 dark:bg-rose-950/30 dark:hover:border-rose-400/50'
+                        : ($isInactive
+                            ? 'border-slate-200 bg-slate-100 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600'
+                            : 'border-slate-200 bg-white hover:border-cyan-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-cyan-500/60 dark:hover:bg-slate-800');
                 @endphp
 
-                <article x-show="!search || $el.innerText.toLowerCase().includes(search.toLowerCase())"
-                         x-transition.opacity
-                         class="rounded-2xl border p-4 shadow-sm transition
-                            {{ $isIsolated
-                                ? 'border-rose-200 bg-rose-50/30 hover:border-rose-300 dark:border-rose-400/20 dark:bg-rose-400/[0.04]'
-                                : ($isInactive
-                                    ? 'border-slate-200 bg-slate-100/70 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/60'
-                                    : 'border-slate-200 bg-white hover:border-cyan-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-cyan-500/50') }}">
+                <article x-show="!search || $el.innerText.toLowerCase().includes(search.toLowerCase())" x-transition.opacity class="rounded-2xl border p-4 shadow-sm transition {{ $customerCardClass }}">
                     <div class="flex gap-3">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl
-                            {{ $isIsolated ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300' : ($isInactive ? 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300') }}">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $isIsolated ? 'bg-rose-500/10 text-rose-600 dark:bg-rose-400/10 dark:text-rose-300' : ($isInactive ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300' : 'bg-cyan-500/10 text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-300') }}">
                             <span class="text-base font-black">{{ strtoupper(substr($c->name ?: '?', 0, 1)) }}</span>
                         </div>
 
@@ -151,55 +136,32 @@
                                 <div class="flex shrink-0 items-start gap-1.5">
                                     <div class="pt-0.5 text-right">
                                         @if($isIsolated)
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-600 ring-1 ring-rose-500/20 dark:text-rose-400"><span class="h-1 w-1 rounded-full bg-rose-500"></span>Terisolir</span>
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-600 ring-1 ring-rose-500/20 dark:text-rose-300"><span class="h-1 w-1 rounded-full bg-rose-500"></span>Terisolir</span>
                                         @elseif($isInactive)
                                             <span class="inline-flex items-center gap-1 rounded-full bg-slate-500/10 px-2 py-0.5 text-[10px] font-bold text-slate-600 ring-1 ring-slate-500/20 dark:text-slate-300"><span class="h-1 w-1 rounded-full bg-slate-400"></span>Nonaktif</span>
                                         @elseif($c->realtime_online)
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400"><span class="h-1 w-1 rounded-full bg-emerald-500"></span>Online</span>
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-300"><span class="h-1 w-1 rounded-full bg-emerald-500"></span>Online</span>
                                         @else
                                             <span class="inline-flex items-center gap-1 rounded-full bg-slate-500/10 px-2 py-0.5 text-[10px] font-bold text-slate-600 ring-1 ring-slate-500/20 dark:text-slate-300"><span class="h-1 w-1 rounded-full bg-slate-400"></span>Offline</span>
                                         @endif
                                     </div>
 
-                                    <div class="relative"
-                                         x-data="{ open: false }"
-                                         @click.outside="open = false"
-                                         @keydown.escape.window="open = false">
-                                        <button type="button"
-                                                @click="open = !open"
-                                                :aria-expanded="open.toString()"
-                                                aria-haspopup="menu"
-                                                aria-label="Buka aksi pelanggan"
-                                                class="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-cyan-300/30 dark:hover:bg-slate-800 dark:hover:text-slate-200 dark:focus:ring-cyan-400/15">⋮</button>
+                                    <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
+                                        <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-haspopup="menu" aria-label="Buka aksi pelanggan" class="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-cyan-300/30 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:focus:ring-cyan-400/15">⋮</button>
 
-                                        <div x-cloak
-                                             x-show="open"
-                                             x-transition.origin.top.right
-                                             role="menu"
-                                             class="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-                                            <button type="button"
-                                                    @click="detailId = {{ $c->id }}; detailOpen = true; open = false"
-                                                    role="menuitem"
-                                                    class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Detail</button>
-                                            <a href="{{ route('customers.edit', $c) }}"
-                                               role="menuitem"
-                                               class="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Edit</a>
+                                        <div x-cloak x-show="open" x-transition.origin.top.right role="menu" class="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
+                                            <button type="button" @click="detailId = {{ $c->id }}; detailOpen = true; open = false" role="menuitem" class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Detail</button>
+                                            <a href="{{ route('customers.edit', $c) }}" role="menuitem" class="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Edit</a>
 
                                             @if($isActive)
                                                 <form method="POST" action="{{ route('customers.isolate', $c) }}">
                                                     @csrf
-                                                    <button type="submit"
-                                                            role="menuitem"
-                                                            onclick="return confirm('Isolir pelanggan ini secara manual?')"
-                                                            class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">Isolir</button>
+                                                    <button type="submit" role="menuitem" onclick="return confirm('Isolir pelanggan ini secara manual?')" class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">Isolir</button>
                                                 </form>
                                             @elseif($isIsolated)
                                                 <form method="POST" action="{{ route('customers.activate', $c) }}">
                                                     @csrf
-                                                    <button type="submit"
-                                                            role="menuitem"
-                                                            onclick="return confirm('Aktifkan kembali pelanggan terisolir ini?')"
-                                                            class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30">Aktifkan</button>
+                                                    <button type="submit" role="menuitem" onclick="return confirm('Aktifkan kembali pelanggan terisolir ini?')" class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/30">Aktifkan</button>
                                                 </form>
                                             @else
                                                 <div class="px-3 py-2.5 text-xs font-semibold text-slate-400">Status nonaktif perlu ditinjau melalui Edit.</div>
@@ -209,10 +171,7 @@
                                             <form method="POST" action="{{ route('customers.destroy', $c) }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
-                                                        role="menuitem"
-                                                        onclick="return confirm('Hapus pelanggan ini dari billing? Data terkait dapat ikut terhapus dan tidak dapat dipulihkan.')"
-                                                        class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">Hapus</button>
+                                                <button type="submit" role="menuitem" onclick="return confirm('Hapus pelanggan ini dari billing? Data terkait dapat ikut terhapus dan tidak dapat dipulihkan.')" class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">Hapus</button>
                                             </form>
                                         </div>
                                     </div>
@@ -244,56 +203,46 @@
                     <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-2xl">👥</div>
                     <h2 class="mt-4 font-bold text-slate-800 dark:text-slate-100">Belum ada pelanggan</h2>
                     <p class="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">Tambahkan pelanggan secara manual atau import akun PPPoE dari MikroTik.</p>
-                    <a href="{{ route('customers.create') }}"
-                       class="mt-5 inline-flex rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-400">+ Tambah Pelanggan</a>
+                    <a href="{{ route('customers.create') }}" class="mt-5 inline-flex rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-400">+ Tambah Pelanggan</a>
                 </div>
             @endforelse
         </div>
     </section>
 
-    <div x-cloak
-         x-show="detailOpen"
-         x-transition.opacity
-         class="fixed inset-0 z-50 flex items-center justify-center p-4"
-         role="dialog"
-         aria-modal="true"
-         aria-label="Detail pelanggan">
+    <div x-cloak x-show="detailOpen" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Detail pelanggan">
         <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" @click="detailOpen = false"></div>
-        <div class="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+        <div class="relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/50">
             @foreach($customers as $c)
                 <div x-show="detailId === {{ $c->id }}" x-cloak>
-                    <div class="flex items-start justify-between border-b border-slate-100 p-5 dark:border-slate-800">
+                    <div class="flex items-start justify-between border-b border-slate-100 p-5 dark:border-slate-700">
                         <div class="flex min-w-0 items-center gap-3">
-                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-lg font-black text-cyan-700 dark:text-cyan-300">{{ strtoupper(substr($c->name ?: '?', 0, 1)) }}</div>
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-lg font-black text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-300">{{ strtoupper(substr($c->name ?: '?', 0, 1)) }}</div>
                             <div class="min-w-0">
                                 <h2 class="truncate text-lg font-black text-slate-900 dark:text-white">{{ $c->name ?: '-' }}</h2>
                                 <p class="mt-0.5 truncate text-xs text-slate-400">{{ $c->customer_code ?: '-' }} · {{ $c->pppoe_username ?: '-' }}</p>
                             </div>
                         </div>
-                        <button type="button"
-                                @click="detailOpen = false"
-                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg font-bold text-slate-500 transition hover:bg-rose-100 hover:text-rose-600 dark:bg-slate-800 dark:text-slate-300"
-                                aria-label="Tutup detail pelanggan">×</button>
+                        <button type="button" @click="detailOpen = false" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg font-bold text-slate-500 transition hover:bg-rose-100 hover:text-rose-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-rose-950/40" aria-label="Tutup detail pelanggan">×</button>
                     </div>
 
                     <div class="p-5">
                         <div class="grid gap-3 sm:grid-cols-2">
-                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Paket Internet</div>
                                 <div class="mt-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">{{ optional($c->internetPackage)->name ?: '-' }}</div>
                             </div>
-                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Biaya Ditagihkan</div>
                                 <div class="mt-1.5 text-sm font-bold text-cyan-700 dark:text-cyan-300">Rp {{ number_format((float) $c->effective_monthly_price, 0, ',', '.') }}</div>
                                 @if($c->monthly_price_override !== null)
                                     <div class="mt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">Harga khusus</div>
                                 @endif
                             </div>
-                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Status Akun</div>
                                 <div class="mt-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">{{ ucfirst($c->status ?: 'nonaktif') }}</div>
                             </div>
-                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                            <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Koneksi Realtime</div>
                                 <div class="mt-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">
                                     @if($c->status === 'isolated')
@@ -309,7 +258,7 @@
 
                         <div class="mt-5">
                             <h3 class="text-sm font-black text-slate-800 dark:text-slate-100">Informasi Lengkap</h3>
-                            <dl class="mt-3 overflow-hidden rounded-2xl border border-slate-100 text-sm dark:border-slate-800">
+                            <dl class="mt-3 overflow-hidden rounded-2xl border border-slate-100 text-sm dark:border-slate-700">
                                 <div class="grid grid-cols-3 gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                                     <dt class="text-slate-400">Router</dt>
                                     <dd class="col-span-2 font-semibold text-slate-700 dark:text-slate-200">{{ optional($c->router)->name ?: '-' }}</dd>
@@ -338,10 +287,8 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-end border-t border-slate-100 p-5 dark:border-slate-800">
-                        <button type="button"
-                                @click="detailOpen = false"
-                                class="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">Tutup</button>
+                    <div class="flex justify-end border-t border-slate-100 p-5 dark:border-slate-700">
+                        <button type="button" @click="detailOpen = false" class="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">Tutup</button>
                     </div>
                 </div>
             @endforeach

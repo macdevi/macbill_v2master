@@ -11,7 +11,7 @@
 
         .dashboard-header__title {
             margin: 0;
-            color: #0f172a;
+            color: #191923;
             font-size: clamp(1.55rem, 2.2vw, 2.12rem);
             font-weight: 900;
             letter-spacing: -0.045em;
@@ -77,7 +77,7 @@
             align-items: center;
             gap: 0.62rem;
             margin: 0;
-            color: #0f172a;
+            color: #191923;
             font-size: 1.22rem;
             font-weight: 900;
             letter-spacing: -0.028em;
@@ -136,7 +136,7 @@
             z-index: 1;
             display: block;
             margin-top: 0.28rem;
-            color: #1d4ed8;
+            color: #4318e4;
             font-size: 1.85rem;
             font-weight: 950;
             letter-spacing: -0.06em;
@@ -241,7 +241,7 @@
         .customer-status__value {
             display: block;
             margin-top: 0.85rem;
-            color: #0f172a;
+            color: #191923;
             font-size: clamp(2.15rem, 4vw, 2.8rem);
             font-weight: 950;
             letter-spacing: -0.07em;
@@ -320,7 +320,7 @@
             border-color: rgba(71, 85, 105, 0.72);
             background:
                 radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.16), transparent 33%),
-                linear-gradient(145deg, #172033 0%, #111827 100%);
+                linear-gradient(145deg, #232235 0%, #1d1b2a 100%);
             box-shadow: 0 18px 46px rgba(0, 0, 0, 0.24);
         }
 
@@ -455,7 +455,7 @@
 
         .customer-summary-card__title {
             margin: 0;
-            color: #0f172a;
+            color: #191923;
             font-size: 1.15rem;
             font-weight: 900;
             letter-spacing: -0.03em;
@@ -523,7 +523,7 @@
         .customer-metric__value {
             display: block;
             margin-top: 0.58rem;
-            color: #0f172a;
+            color: #191923;
             font-size: clamp(1.8rem, 3.1vw, 2.45rem);
             font-weight: 950;
             letter-spacing: -0.065em;
@@ -573,7 +573,7 @@
 
         .dark .customer-summary-card {
             border-color: #334155;
-            background: #111827;
+            background: #1d1b2a;
             box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
         }
 
@@ -801,7 +801,7 @@
             .customer-summary-card__mobile-total strong {
                 display: block;
                 margin-top: 0.18rem;
-                color: #1d4ed8;
+                color: #4318e4;
                 font-size: 1.45rem;
                 font-weight: 950;
                 letter-spacing: -0.06em;
@@ -1034,7 +1034,7 @@
 
         .customer-status-modal__title {
             margin: 0;
-            color: #0f172a;
+            color: #191923;
             font-size: 1.2rem;
             font-weight: 900;
             line-height: 1.2;
@@ -1106,7 +1106,7 @@
         .customer-status-modal__customer-info h3 {
             margin: 0;
             overflow: hidden;
-            color: #0f172a;
+            color: #191923;
             font-size: 0.91rem;
             font-weight: 850;
             line-height: 1.35;
@@ -1171,7 +1171,7 @@
 
         .dark .customer-status-modal__panel {
             border-color: #334155;
-            background: #111827;
+            background: #1d1b2a;
         }
 
         .dark .customer-status-modal__header,
@@ -1181,7 +1181,7 @@
         }
 
         .dark .customer-status-modal__footer {
-            background: #0f172a;
+            background: #191923;
         }
 
         .dark .customer-status-modal__title,
@@ -1196,7 +1196,7 @@
         }
 
         .dark .customer-status-modal__close {
-            background: #1e293b;
+            background: #302e42;
             color: #e2e8f0;
         }
 
@@ -1248,7 +1248,7 @@
         .dark .customer-summary-card {
             border: 2px solid transparent;
             background:
-                linear-gradient(#111827, #111827) padding-box,
+                linear-gradient(#1d1b2a, #1d1b2a) padding-box,
                 linear-gradient(
                     90deg,
                     #16a34a 0%,
@@ -1354,7 +1354,7 @@
 
         .financial-summary-card__title {
             margin: 0.3rem 0 0;
-            color: #0f172a;
+            color: #191923;
             font-size: 1.15rem;
             font-weight: 900;
             line-height: 1.2;
@@ -1642,7 +1642,7 @@
 
         .finance-support-row__value {
             flex: 0 0 auto;
-            color: #0f172a;
+            color: #191923;
             font-size: clamp(0.78rem, 2.7vw, 0.98rem);
             font-weight: 950;
             letter-spacing: -0.04em;
@@ -1656,7 +1656,7 @@
         }
 
         .finance-support-row--estimate .finance-support-row__value {
-            color: #1d4ed8;
+            color: #4318e4;
         }
 
         .finance-support-row--pending .finance-support-row__icon {
@@ -1671,7 +1671,7 @@
         /* Dark mode */
         .dark .financial-summary-card {
             border-color: #334155;
-            background: #111827;
+            background: #1d1b2a;
             box-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
         }
 
@@ -1723,7 +1723,7 @@
         .dark .finance-flow,
         .dark .finance-support-list {
             border-color: #334155;
-            background: #0f172a;
+            background: #191923;
         }
 
         .dark .finance-flow__label,
@@ -1969,7 +1969,7 @@
         }
 
         .finance-support-row--estimate .finance-support-row__value {
-            color: #1d4ed8;
+            color: #4318e4;
         }
 
         /* Tertunda: amber sebagai tindakan yang perlu diperhatikan */
@@ -1985,7 +1985,7 @@
         /* Dark mode: indigo slate tetap menjadi identitas keuangan */
         .dark .financial-summary-card {
             border-color: #4338ca;
-            background: #111827;
+            background: #1d1b2a;
             box-shadow: 0 16px 38px rgba(49, 46, 129, 0.28);
         }
 
@@ -1993,7 +1993,7 @@
             border-color: #3730a3;
             background:
                 radial-gradient(circle at 100% 0%, rgba(109, 40, 217, 0.28), transparent 42%),
-                linear-gradient(120deg, rgba(49, 46, 129, 0.34), #111827 72%);
+                linear-gradient(120deg, rgba(49, 46, 129, 0.34), #1d1b2a 72%);
         }
 
         .dark .financial-summary-card__eyebrow {
@@ -2082,6 +2082,527 @@
 
         .dark .finance-support-row--pending .finance-support-row__value {
             color: #fcd34d;
+        }
+
+        /* Area financial dashboard table */
+        .financial-summary-card--area {
+            margin-top: 1.5rem;
+        }
+
+        .financial-summary-card--area .financial-summary-card__body {
+            padding: 0;
+        }
+
+        .area-financial-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-color: #cbd5e1 transparent;
+            scrollbar-width: thin;
+        }
+
+        .area-financial-table {
+            width: 100%;
+            min-width: 940px;
+            border-collapse: separate;
+            border-spacing: 0;
+            color: #334155;
+            font-size: 0.875rem;
+        }
+
+        .area-financial-table th,
+        .area-financial-table td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.95rem 1rem;
+            vertical-align: middle;
+        }
+
+        .area-financial-table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            line-height: 1.2;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .area-financial-table td:first-child {
+            min-width: 220px;
+        }
+
+        .area-financial-table tbody tr {
+            transition: background-color 160ms ease;
+        }
+
+        .area-financial-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .area-financial-table tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        .area-financial-table td strong {
+            display: block;
+            color: #302e42;
+            font-size: 0.875rem;
+            font-weight: 750;
+            line-height: 1.35;
+        }
+
+        .area-financial-table__number {
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .area-financial-table__code,
+        .area-financial-table__invoice-count {
+            display: block;
+            margin-top: 0.22rem;
+            color: #94a3b8;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        .area-financial-table__income,
+        .area-financial-table__profit {
+            color: #15803d;
+            font-weight: 750;
+        }
+
+        .area-financial-table__expense {
+            color: #be123c;
+            font-weight: 750;
+        }
+
+        .area-financial-table__pending {
+            color: #b45309;
+            font-weight: 750;
+        }
+
+        .area-financial-table__negative {
+            color: #dc2626;
+            font-weight: 800;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table {
+            color: #cbd5e1;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table th {
+            border-color: #312e81;
+            background: #232235;
+            color: #a5b4fc;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table td {
+            border-color: rgba(99, 102, 241, 0.22);
+        }
+
+        .dark .financial-summary-card--area .area-financial-table tbody tr:hover {
+            background: rgba(49, 46, 129, 0.24);
+        }
+
+        .dark .financial-summary-card--area .area-financial-table td strong {
+            color: #f1f5f9;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table__code,
+        .dark .financial-summary-card--area .area-financial-table__invoice-count {
+            color: #94a3b8;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table__income,
+        .dark .financial-summary-card--area .area-financial-table__profit {
+            color: #6ee7b7;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table__expense {
+            color: #fda4af;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table__pending {
+            color: #fcd34d;
+        }
+
+        .dark .financial-summary-card--area .area-financial-table__negative {
+            color: #fca5a5;
+        }
+
+        .financial-summary-card--area .area-financial-table__scroll-hint {
+            display: none;
+        }
+        @media (max-width: 767px) {
+                        .financial-summary-card--area .financial-summary-card__body {
+                padding: 0;
+            }
+
+            .financial-summary-card--area .area-financial-table-wrapper {
+                padding: 0.55rem;
+            }
+
+            .financial-summary-card--area .area-financial-table {
+                min-width: 850px;
+                border-radius: 12px;
+            }
+
+            .financial-summary-card--area .area-financial-table th,
+            .financial-summary-card--area .area-financial-table td {
+                padding: 0.82rem 0.7rem;
+            }
+
+            .financial-summary-card--area .area-financial-table th:first-child,
+            .financial-summary-card--area .area-financial-table td:first-child {
+                padding-left: 0.9rem;
+            }
+        }
+
+
+        /* Customer page dark-mode consistency */
+        .dark #customer-livefind {
+            background-color: #302e42;
+            border-color: #334155;
+            color: #f1f5f9;
+        }
+
+        .dark #customer-livefind:focus {
+            background-color: #191923;
+            border-color: #7e57ff;
+        }
+
+        .dark .space-y-3.bg-slate-50 {
+            background-color: rgba(2, 6, 23, 0.72);
+        }
+
+        .dark article.border-slate-200.bg-white {
+            background-color: #191923;
+            border-color: #302e42;
+        }
+
+        .dark article.border-slate-200.bg-slate-100\/70 {
+            background-color: rgba(30, 41, 59, 0.72);
+            border-color: #334155;
+        }
+
+        .dark article.border-rose-200.bg-rose-50\/30 {
+            background-color: rgba(136, 19, 55, 0.16);
+            border-color: rgba(251, 113, 133, 0.28);
+        }
+
+        .dark article.border-slate-200.bg-white:hover {
+            background-color: #232235;
+            border-color: rgba(34, 211, 238, 0.55);
+        }
+
+        .dark article.border-slate-200.bg-slate-100\/70:hover {
+            background-color: rgba(51, 65, 85, 0.78);
+            border-color: #475569;
+        }
+
+        .dark article.border-rose-200.bg-rose-50\/30:hover {
+            background-color: rgba(136, 19, 55, 0.24);
+            border-color: rgba(251, 113, 133, 0.44);
+        }
+
+        .dark .space-y-3.bg-slate-50 > article {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+        }
+
+
+        /* Customer page outer card dark-mode repair */
+        .dark .space-y-5 > section.relative.overflow-visible.rounded-2xl {
+            background-color: #191923 !important;
+            border-color: #302e42 !important;
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.20);
+        }
+
+        .dark .space-y-5 > section.relative.overflow-visible.rounded-2xl > div.border-b {
+            background-color: #191923 !important;
+            border-color: #302e42 !important;
+        }
+
+        .dark .space-y-5 > section.relative.overflow-visible.rounded-2xl > div.space-y-3 {
+            background-color: #12111a !important;
+        }
+
+        .dark .space-y-5 > section.relative.overflow-visible.rounded-2xl > div.space-y-3 > article {
+            background-color: #242238;
+        }
+
+        .dark .space-y-5 > section.relative.overflow-visible.rounded-2xl > div.space-y-3 > article:hover {
+            background-color: #2b2940;
+        }
+
+
+        /* Customers page: explicit dark theme layers */
+        .dark .customers-page {
+            color: #e2e8f0;
+        }
+
+        .dark .customers-page > section {
+            background: #191923 !important;
+            border-color: #334155 !important;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24) !important;
+        }
+
+        .dark .customers-page > section > div:first-child {
+            background: #191923 !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .customers-page > section > div.space-y-3 {
+            background: #12111a !important;
+        }
+
+        .dark .customers-page > section > div.space-y-3 > article {
+            background: #242238 !important;
+            border-color: #334155 !important;
+        }
+
+        .dark .customers-page > section > div.space-y-3 > article:hover {
+            background: #29273d !important;
+            border-color: rgba(34, 211, 238, 0.55) !important;
+        }
+
+        .dark .customers-page > section > div.space-y-3 > article[class*="rose"] {
+            background: rgba(136, 19, 55, 0.24) !important;
+            border-color: rgba(251, 113, 133, 0.32) !important;
+        }
+
+        .dark .customers-page > section > div.space-y-3 > article[class*="slate-100"] {
+            background: #302e42 !important;
+            border-color: #475569 !important;
+        }
+
+        .dark .customers-page details > div {
+            background: #191923 !important;
+            border-color: #334155 !important;
+        }
+
+@media (max-width: 767px){.financial-summary-card--area .area-financial-table__scroll-hint{display:block;margin:0 .55rem .45rem;color:#64748b;font-size:.72rem;font-weight:700;letter-spacing:.01em}.dark .financial-summary-card--area .area-financial-table__scroll-hint{color:#a5b4fc}}
+        /* MACBILL PREMIUM PURPLE — CUSTOMER CARD POLISH */
+        .customer-summary-card {
+            overflow: hidden;
+            border: 1px solid #e5e2f7;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 100% 0%, rgba(126, 87, 255, .12), transparent 31%),
+                linear-gradient(145deg, #fff 0%, #faf9ff 100%);
+            box-shadow: 0 18px 42px rgba(55, 35, 133, .08);
+        }
+
+        .customer-summary-card__accent {
+            grid-row: auto;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #4318e4 0%, #7e57ff 54%, #b39cff 100%);
+        }
+
+        .customer-summary-card__heading {
+            align-items: flex-start;
+            padding: 1.45rem 1.55rem 1.1rem;
+        }
+
+        .customer-summary-card__eyebrow {
+            color: #7c6adf;
+            font-size: .66rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            line-height: 1.2;
+        }
+
+        .customer-summary-card__title {
+            color: #191923;
+            font-size: clamp(1.2rem, 2vw, 1.45rem);
+            font-weight: 700;
+            letter-spacing: -.035em;
+            line-height: 1.12;
+        }
+
+        .customer-summary-card__live {
+            flex: 0 0 auto;
+            padding: .46rem .68rem;
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+            color: #15803d;
+            box-shadow: 0 4px 12px rgba(21, 128, 61, .08);
+        }
+
+        .customer-summary-card__metrics {
+            border-top: 1px solid #ebeef9;
+        }
+
+        .customer-metric {
+            min-height: 152px;
+            padding: 1.25rem 1.55rem 1.35rem;
+            transition: background-color 180ms ease;
+        }
+
+        .customer-metric + .customer-metric {
+            border-left-color: #ebeef9;
+        }
+
+        .customer-metric--clickable {
+            cursor: pointer;
+        }
+
+        .customer-metric--clickable:hover {
+            background: rgba(126, 87, 255, .055);
+        }
+
+        .customer-metric--clickable:focus-visible {
+            z-index: 1;
+            outline: 3px solid rgba(67, 24, 228, .28);
+            outline-offset: -3px;
+        }
+
+        .customer-metric__label {
+            gap: .48rem;
+            color: #64748b;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: .015em;
+        }
+
+        .customer-metric__dot {
+            width: 9px;
+            height: 9px;
+            box-shadow: 0 0 0 4px currentColor;
+            opacity: .82;
+        }
+
+        .customer-metric__value {
+            margin-top: .72rem;
+            color: #191923;
+            font-size: clamp(2rem, 3.25vw, 2.75rem);
+            font-weight: 700;
+            letter-spacing: -.055em;
+            line-height: .94;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .customer-metric__detail {
+            margin-top: .55rem;
+            color: #64748b;
+            font-size: .69rem;
+            font-weight: 600;
+            line-height: 1.35;
+        }
+
+        .customer-metric__action {
+            display: inline-flex;
+            margin-top: .5rem;
+            color: #6d5add;
+            font-size: .67rem;
+            font-weight: 750;
+        }
+
+        .customer-metric--total {
+            background: linear-gradient(145deg, rgba(240, 237, 255, .9), rgba(255, 255, 255, 0));
+        }
+
+        .customer-metric--total .customer-metric__label,
+        .customer-metric--total .customer-metric__value {
+            color: #4318e4;
+        }
+
+        .customer-metric--online .customer-metric__label,
+        .customer-metric--online .customer-metric__value,
+        .customer-metric--online .customer-metric__action {
+            color: #15803d;
+        }
+
+        .customer-metric--offline .customer-metric__label,
+        .customer-metric--offline .customer-metric__value,
+        .customer-metric--offline .customer-metric__action {
+            color: #be123c;
+        }
+
+        .customer-metric--isolated .customer-metric__label,
+        .customer-metric--isolated .customer-metric__value,
+        .customer-metric--isolated .customer-metric__action {
+            color: #b45309;
+        }
+
+        /* MACBILL PREMIUM PURPLE — CUSTOMER LIVE MOTION */
+        .customer-summary-card {
+            position: relative;
+            isolation: isolate;
+        }
+
+        .customer-summary-card::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            inset: -1px;
+            display: block;
+            border-radius: inherit;
+            padding: 1px;
+            background: conic-gradient(
+                from 0deg,
+                rgba(67, 24, 228, 0) 0deg,
+                rgba(67, 24, 228, 0) 110deg,
+                rgba(126, 87, 255, 0.68) 155deg,
+                rgba(74, 222, 128, 0.72) 185deg,
+                rgba(126, 87, 255, 0.68) 215deg,
+                rgba(67, 24, 228, 0) 265deg,
+                rgba(67, 24, 228, 0) 360deg
+            );
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: macbill-customer-orbit 6.5s linear infinite;
+            pointer-events: none;
+        }
+
+        .customer-summary-card__live i {
+            animation: macbill-live-pulse 1.8s ease-in-out infinite;
+        }
+
+        @keyframes macbill-customer-orbit {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes macbill-live-pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+                transform: scale(1.08);
+            }
+        }
+
+        .dark .customer-summary-card::before {
+            background: conic-gradient(
+                from 0deg,
+                rgba(67, 24, 228, 0) 0deg,
+                rgba(67, 24, 228, 0) 110deg,
+                rgba(167, 139, 250, 0.78) 155deg,
+                rgba(74, 222, 128, 0.78) 185deg,
+                rgba(167, 139, 250, 0.78) 215deg,
+                rgba(67, 24, 228, 0) 265deg,
+                rgba(67, 24, 228, 0) 360deg
+            );
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .customer-summary-card::before,
+            .customer-summary-card__live i {
+                animation: none;
+            }
         }
 
 </style>

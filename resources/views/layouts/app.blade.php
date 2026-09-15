@@ -17,6 +17,8 @@
       x-init="init()"
       :class="{ dark: dark }">
 <head>
+    <style>[x-cloak] { display: none !important; }</style>
+    <script>(()=>{try{const t=localStorage.getItem("macbilling-theme");document.documentElement.classList.toggle("dark",t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches)}catch(e){}})();</script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>@yield('title', config('app.name', 'macbilling_v2'))</title>
@@ -195,17 +197,17 @@
     </div>
 
     <aside :class="menu ? 'translate-x-0' : '-translate-x-full'"
-           class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white shadow-2xl shadow-slate-900/10 transition-transform duration-300 ease-out lg:static lg:translate-x-0 lg:shadow-none dark:border-slate-800 dark:bg-slate-900">
+           class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-slate-200 bg-white shadow-2xl shadow-slate-900/10 transition-transform duration-300 ease-out lg:static lg:translate-x-0 lg:shadow-none lg:transition-none dark:border-slate-800 dark:bg-slate-900">
 
         <div class="flex h-full min-h-0 flex-col p-4">
             <div class="mb-5 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 px-4 py-4 shadow-sm dark:border-slate-700 dark:from-slate-900 dark:to-slate-800">
                 <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-sm font-black text-white shadow-lg shadow-cyan-500/25">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4318E4] to-[#7E57FF] text-sm font-black text-white shadow-lg shadow-violet-500/25">
                         MB
                     </div>
                     <div class="min-w-0">
                         <div class="truncate text-base font-black tracking-[0.13em] text-slate-900 dark:text-white">
-                            MAC<span class="text-cyan-600 dark:text-cyan-400">BILLING</span>
+                            MAC<span class="text-[#4318E4] dark:text-violet-300">BILLING</span>
                         </div>
                         <div class="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
                             Panel Administrasi
@@ -225,11 +227,11 @@
                     @foreach($section['items'] as $item)
                         @php
                             $linkClass = $item['active']
-                                ? 'text-cyan-700 dark:text-cyan-300'
+                                ? 'text-[#4318E4] dark:text-violet-300'
                                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white';
 
                             $iconClass = $item['active']
-                                ? 'bg-cyan-100 ring-1 ring-cyan-200 dark:bg-cyan-400/15 dark:ring-cyan-400/20'
+                                ? 'bg-violet-100 ring-1 ring-violet-200 dark:bg-violet-400/15 dark:ring-violet-400/20'
                                 : match ($item['tone']) {
                                     'sky' => 'bg-sky-50 ring-1 ring-sky-100 dark:bg-sky-400/10 dark:ring-sky-400/15',
                                     'emerald' => 'bg-emerald-50 ring-1 ring-emerald-100 dark:bg-emerald-400/10 dark:ring-emerald-400/15',
@@ -243,7 +245,7 @@
 
                         <a href="{{ $item['href'] }}"
                            @click="menu = false"
-                           class="group flex items-center gap-3 rounded-xl px-3 py-2.5 font-semibold transition duration-200 focus:outline-none focus:ring-4 focus:ring-cyan-300/40 dark:focus:ring-cyan-400/20 {{ $linkClass }}"
+                           class="group flex items-center gap-3 rounded-xl px-3 py-2.5 font-semibold transition duration-200 focus:outline-none focus:ring-4 focus:ring-violet-300/45 dark:focus:ring-violet-400/25 {{ $linkClass }}"
                            @if($item['active']) aria-current="page" @endif>
                             <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition {{ $iconClass }}">
                                 <img src="{{ $item['icon'] }}"
@@ -254,7 +256,7 @@
                             <span class="truncate">{{ $item['label'] }}</span>
 
                             @if($item['active'])
-                                <span class="ml-auto h-2 w-2 shrink-0 rounded-full bg-cyan-500 shadow-sm shadow-cyan-500/50 dark:bg-cyan-300"></span>
+                                <span class="ml-auto h-2 w-2 shrink-0 rounded-full bg-[#4318E4] shadow-sm shadow-violet-500/50 dark:bg-violet-300"></span>
                             @endif
                         </a>
                     @endforeach
@@ -291,7 +293,7 @@
         <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:px-8 dark:border-slate-800 dark:bg-slate-950/85">
             <div class="flex min-w-0 items-center gap-3">
                 <button @click="menu = true"
-                        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-300/40 lg:hidden dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-xl text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-violet-300/45 lg:hidden dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                         aria-label="Buka menu navigasi">
                     <span aria-hidden="true">☰</span>
                 </button>
@@ -307,13 +309,13 @@
             </div>
 
             <button @click="dark = !dark"
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-300/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus:ring-cyan-400/20"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-violet-300/45 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:focus:ring-violet-400/25"
                     :aria-label="dark ? 'Aktifkan tema terang' : 'Aktifkan tema gelap'">
                 <svg x-show="!dark" class="h-4 w-4 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <circle cx="12" cy="12" r="4"></circle>
                     <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
                 </svg>
-                <svg x-show="dark" x-cloak class="h-4 w-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <svg x-show="dark" x-cloak class="h-4 w-4 text-violet-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path>
                 </svg>
                 <span x-text="dark ? 'Dark' : 'Light'"></span>

@@ -236,6 +236,78 @@
     </div>
 
 
+
+        @if (auth()->user()?->isSuperAdmin() && $areaFinancialSummaries->isNotEmpty())
+            <section class="financial-summary-card financial-summary-card--area" aria-labelledby="area-financial-summary-title">
+                <header class="financial-summary-card__header">
+                    <div>
+                        <p class="financial-summary-card__eyebrow">SUPER ADMIN</p>
+                        <h2 id="area-financial-summary-title" class="financial-summary-card__title">
+                            Rincian Keuangan per Wilayah
+                        </h2>
+                        <p class="financial-summary-card__period">
+                            Periode {{ $financialMonthLabel }}
+                        </p>
+                    </div>
+
+                    <div class="financial-summary-card__badge">
+                        <span class="financial-summary-card__badge-dot"></span>
+                        Per wilayah
+                    </div>
+                </header>
+
+                <div class="financial-summary-card__body">
+                    <p class="area-financial-table__scroll-hint" aria-hidden="true">Geser tabel untuk melihat seluruh metrik →</p>
+                    <div class="area-financial-table-wrapper">
+                        <table class="area-financial-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Wilayah</th>
+                                    <th scope="col" class="area-financial-table__number">Pelanggan Aktif</th>
+                                    <th scope="col" class="area-financial-table__number">Pembayaran Diterima</th>
+                                    <th scope="col" class="area-financial-table__number">Pengeluaran</th>
+                                    <th scope="col" class="area-financial-table__number">Laba Bersih Kas</th>
+                                    <th scope="col" class="area-financial-table__number">Piutang Aktif</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($areaFinancialSummaries as $areaSummary)
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $areaSummary['name'] }}</strong>
+                                            @if (!empty($areaSummary['code']))
+                                                <span class="area-financial-table__code">{{ $areaSummary['code'] }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="area-financial-table__number">
+                                            {{ number_format($areaSummary['customer_count'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="area-financial-table__number area-financial-table__income">
+                                            Rp {{ number_format($areaSummary['income'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="area-financial-table__number area-financial-table__expense">
+                                            Rp {{ number_format($areaSummary['expense'], 0, ',', '.') }}
+                                        </td>
+                                        <td class="area-financial-table__number {{ $areaSummary['net_profit'] < 0 ? 'area-financial-table__negative' : 'area-financial-table__profit' }}">
+                                            {{ $areaSummary['net_profit'] < 0 ? '- ' : '' }}Rp {{ number_format(abs($areaSummary['net_profit']), 0, ',', '.') }}
+                                        </td>
+                                        <td class="area-financial-table__number area-financial-table__pending">
+                                            Rp {{ number_format($areaSummary['pending_revenue'], 0, ',', '.') }}
+                                            @if ($areaSummary['pending_invoice_count'] > 0)
+                                                <span class="area-financial-table__invoice-count">
+                                                    {{ number_format($areaSummary['pending_invoice_count'], 0, ',', '.') }} invoice
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        @endif
+
     {{-- Modal daftar pelanggan berdasarkan status koneksi --}}
     <div
         id="customer-status-modal"
