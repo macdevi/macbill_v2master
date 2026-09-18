@@ -38,6 +38,20 @@ class MikroTikService
             ->read();
     }
 
+    /**
+     * Membaca status dan resource MikroTik untuk dashboard.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function systemResource(Router $router): ?array
+    {
+        $rows = $this->client($router)
+            ->query('/system/resource/print')
+            ->read();
+
+        return $rows[0] ?? null;
+    }
+
     private function secret(Router $router, string $username): ?array
     {
         $username = trim($username);

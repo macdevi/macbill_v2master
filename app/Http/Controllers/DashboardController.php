@@ -95,6 +95,22 @@ class DashboardController extends Controller
             ->where('active', true)
             ->get();
 
+        $mikrotikConnected = 'Disconnected';
+        $mikrotikCpu = null;
+        $mikrotikUptime = null;
+        foreach ($routers as $router) {
+            try {
+                $data = $mikrotik->systemResource($router);
+                if (is_array($data)) {
+                    $mikrotikConnected = 'Connected';
+                    $mikrotikCpu = isset($data['cpu-load']) ? (int) $data['cpu-load'] : null;
+                    $mikrotikUptime = $data['uptime'] ?? null;
+                    break;
+                }
+            } catch (Throwable $e) {
+                Log::warning('Dashboard gagal membaca resource MikroTik.', ['router_id' => $router->id, 'router_name' => $router->name, 'message' => $e->getMessage()]);
+            }
+        }
         foreach ($routers as $router) {
             try {
                 $activeUsers = $mikrotik->onlineUsers($router);
@@ -350,6 +366,9 @@ class DashboardController extends Controller
             'pendingInvoiceCount',
             'financialMonthLabel',
             'areaFinancialSummaries',
+            'mikrotikConnected',
+            'mikrotikCpu',
+            'mikrotikUptime',
         ));
     }
 }

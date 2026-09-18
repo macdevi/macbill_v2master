@@ -2531,78 +2531,262 @@
             color: #b45309;
         }
 
-        /* MACBILL PREMIUM PURPLE — CUSTOMER LIVE MOTION */
+        /* MACBILL PREMIUM PURPLE — LIVE NETWORK SHIMMER */
         .customer-summary-card {
             position: relative;
             isolation: isolate;
+            overflow: hidden;
+            border: 1px solid #e5e2f7;
+            box-shadow: 0 18px 42px rgba(55, 35, 133, .08);
         }
 
         .customer-summary-card::before {
+            display: none;
+        }
+
+        .customer-summary-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .customer-summary-card__live {
+            position: relative;
+            overflow: hidden;
+            border-color: #bbf7d0;
+            background: #f0fdf4;
+            color: #15803d;
+        }
+
+        .customer-summary-card__live::after {
             content: "";
             position: absolute;
-            z-index: -1;
-            inset: -1px;
-            display: block;
-            border-radius: inherit;
-            padding: 1px;
-            background: conic-gradient(
-                from 0deg,
-                rgba(67, 24, 228, 0) 0deg,
-                rgba(67, 24, 228, 0) 110deg,
-                rgba(126, 87, 255, 0.68) 155deg,
-                rgba(74, 222, 128, 0.72) 185deg,
-                rgba(126, 87, 255, 0.68) 215deg,
-                rgba(67, 24, 228, 0) 265deg,
-                rgba(67, 24, 228, 0) 360deg
-            );
-            -webkit-mask:
-                linear-gradient(#000 0 0) content-box,
-                linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: macbill-customer-orbit 6.5s linear infinite;
+            inset: -35% auto -35% -45%;
+            width: 34%;
+            background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0) 25%, rgba(255,255,255,.9) 50%, rgba(255,255,255,0) 75%, transparent 100%);
+            transform: skewX(-18deg);
+            animation: macbill-live-badge-shimmer 3.8s ease-in-out infinite;
             pointer-events: none;
         }
 
         .customer-summary-card__live i {
-            animation: macbill-live-pulse 1.8s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
+            animation: macbill-live-beacon 1.8s ease-in-out infinite;
         }
 
-        @keyframes macbill-customer-orbit {
-            to {
-                transform: rotate(360deg);
-            }
+        .customer-summary-card__progress {
+            position: relative;
+            overflow: hidden;
+            height: 13px;
+            border-color: rgba(126, 87, 255, .16);
+            background: #e9e7f2;
+            box-shadow: inset 0 1px 2px rgba(25, 25, 35, .08);
         }
 
-        @keyframes macbill-live-pulse {
-            0%, 100% {
-                box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
-                transform: scale(1);
-            }
-            50% {
-                box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-                transform: scale(1.08);
-            }
+        .customer-summary-card__progress-online {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(90deg, #16a34a 0%, #4ade80 100%);
         }
 
-        .dark .customer-summary-card::before {
-            background: conic-gradient(
-                from 0deg,
-                rgba(67, 24, 228, 0) 0deg,
-                rgba(67, 24, 228, 0) 110deg,
-                rgba(167, 139, 250, 0.78) 155deg,
-                rgba(74, 222, 128, 0.78) 185deg,
-                rgba(167, 139, 250, 0.78) 215deg,
-                rgba(67, 24, 228, 0) 265deg,
-                rgba(67, 24, 228, 0) 360deg
-            );
+        .customer-summary-card__progress-online::after {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 -45%;
+            width: 30%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.20), rgba(255,255,255,.82), rgba(255,255,255,.20), transparent);
+            transform: skewX(-18deg);
+            animation: macbill-network-shimmer 2.9s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .customer-metric--clickable {
+            transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+        }
+
+        .customer-metric--clickable:hover,
+        .customer-metric--clickable:active {
+            transform: translateY(-2px);
+            background: rgba(126, 87, 255, .06);
+            box-shadow: inset 0 0 0 1px rgba(126, 87, 255, .12);
+        }
+
+        .customer-metric--online:hover,
+        .customer-metric--online:active {
+            box-shadow: inset 0 0 0 1px rgba(34, 197, 94, .26);
+        }
+
+        .customer-metric--offline:hover,
+        .customer-metric--offline:active {
+            box-shadow: inset 0 0 0 1px rgba(244, 63, 94, .24);
+        }
+
+        .customer-metric--isolated:hover,
+        .customer-metric--isolated:active {
+            box-shadow: inset 0 0 0 1px rgba(245, 158, 11, .28);
+        }
+
+        @keyframes macbill-live-beacon {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(34, 197, 94, .15); transform: scale(1); }
+            50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); transform: scale(1.08); }
+        }
+
+        @keyframes macbill-live-badge-shimmer {
+            0%, 55% { left: -45%; }
+            82%, 100% { left: 125%; }
+        }
+
+        @keyframes macbill-network-shimmer {
+            0%, 35% { left: -45%; }
+            75%, 100% { left: 125%; }
+        }
+
+        .dark .customer-summary-card {
+            border-color: rgba(167, 139, 250, .20);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, .28);
+        }
+
+        .dark .customer-summary-card__live {
+            border-color: rgba(74, 222, 128, .28);
+            background: rgba(20, 83, 45, .32);
+            color: #bbf7d0;
+        }
+
+        .dark .customer-summary-card__progress {
+            border-color: rgba(167, 139, 250, .22);
+            background: #302e42;
+        }
+
+        .dark .customer-summary-card__progress-online::after {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), rgba(187,247,208,.82), rgba(255,255,255,.12), transparent);
         }
 
         @media (prefers-reduced-motion: reduce) {
-            .customer-summary-card::before,
-            .customer-summary-card__live i {
+            .customer-summary-card__live::after,
+            .customer-summary-card__live i,
+            .customer-summary-card__progress-online::after {
                 animation: none;
             }
+
+            .customer-metric--clickable {
+                transition: none;
+            }
         }
+        /* MACBILL — NETWORK CARD LIGHT MODE FIX */
+        .customer-summary-card {
+            background: #f7f6fc;
+            border-color: #cfc6eb;
+        }
+
+        /* Aktifkan kembali garis hijau pada tepi card Monitoring Jaringan */
+        .customer-summary-card::before {
+            content: "";
+            display: block;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            border: 2px solid #22c55e;
+            border-radius: inherit;
+            opacity: 1;
+        }
+
+        /* Background section metric sedikit lebih gelap agar terpisah */
+        .customer-summary-card__metrics {
+            background: #f1f0f8;
+            border-top: 1px solid #d8d1ee;
+        }
+
+        /* Progress area juga dibuat lebih tegas */
+        .customer-summary-card__progress {
+            background: #d7d3e3;
+            border-color: #bbb1d7;
+        }
+
+        /* Dark mode tetap menggunakan treatment dark, bukan outline hijau terang */
+        .dark .customer-summary-card {
+            background: #211f30;
+            border-color: rgba(167, 139, 250, .28);
+        }
+
+        .dark .customer-summary-card::before {
+            border-color: rgba(74, 222, 128, .48);
+        }
+
+        .dark .customer-summary-card__metrics {
+            background: #29263a;
+            border-top-color: rgba(167, 139, 250, .20);
+        }
+
+        .dark .customer-summary-card__progress {
+            background: #353248;
+            border-color: rgba(167, 139, 250, .26);
+        }
+
+
+/* NETWORK MONITORING FINAL START */
+/* NETWORK_FINAL */
+.network-monitoring-card--reference{position:relative;overflow:hidden;background:rgba(255,255,255,.90);border:1px solid #cbd5e1;border-radius:20px;box-shadow:0 18px 50px rgba(20,35,60,.08);color:#172033}
+.network-monitoring-card--reference:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 18% 55%,rgba(32,116,255,.055),transparent 34%)}
+.network-monitoring-card--reference .network-monitoring-card__header,.network-monitoring-card--reference .network-monitoring-card__body,.network-monitoring-card--reference .network-monitoring-card__footer{position:relative;z-index:1}
+.network-monitoring-card--reference .network-monitoring-card__header{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:72px;padding:0 24px;border-bottom:1px solid #dbe3ed}
+.network-monitoring-card--reference .network-monitoring-card__header-left{display:flex;align-items:center;gap:12px;min-width:0}
+.network-monitoring-card--reference .network-monitoring-card__icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;width:40px;height:40px;border-radius:11px;background:rgba(38,120,255,.09);color:#287cff;font-size:20px}
+.network-monitoring-card--reference .network-monitoring-card__title{margin:0 0 3px;color:#172033;font-size:16px;font-weight:800;line-height:1.2}
+.network-monitoring-card--reference .network-monitoring-card__subtitle{margin:0;color:#8a95a7;font-size:11px;line-height:1.35}
+.network-monitoring-card--reference .network-monitoring-card__live,.network-monitoring-card--reference .network-monitoring-card__footer-live{display:inline-flex;align-items:center;gap:7px;color:#16ad6e;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.network-monitoring-card--reference .network-monitoring-card__live i,.network-monitoring-card--reference .network-monitoring-card__footer-live i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#19d17e;box-shadow:0 0 5px #19d17e,0 0 13px rgba(25,209,126,.75);animation:netlive 1.5s ease-in-out infinite}
+.network-monitoring-card--reference .network-monitoring-card__body{display:grid;grid-template-columns:330px minmax(300px,1fr);align-items:center;gap:38px;min-height:305px;padding:25px}
+.network-monitoring-card--reference .network-monitoring-card__donut-area{position:relative;display:flex;align-items:center;justify-content:center;justify-self:center;width:275px;height:275px}
+.network-monitoring-card--reference .network-monitoring-card__donut-area:before{content:"";position:absolute;width:205px;height:205px;border-radius:50%;background:radial-gradient(circle,rgba(26,210,126,.20),rgba(39,124,255,.15) 32%,transparent 72%);filter:blur(4px);animation:netglow 2.4s ease-in-out infinite}
+.network-monitoring-card--reference .network-monitoring-card__signal-ring{position:absolute;width:254px;height:254px;border:1px solid rgba(42,132,255,.38);border-radius:50%;box-shadow:0 0 12px rgba(42,132,255,.13);animation:netspin 9s linear infinite}
+.network-monitoring-card--reference .network-monitoring-card__signal-ring:before{content:"";position:absolute;inset:-6px;border:2px dashed rgba(42,132,255,.38);border-radius:inherit;filter:drop-shadow(0 0 4px rgba(42,132,255,.5));animation:netspinback 13s linear infinite}
+.network-monitoring-card--reference .network-monitoring-card__pulse-ring{position:absolute;width:160px;height:160px;border:1px solid rgba(28,216,128,.45);border-radius:50%;box-shadow:0 0 8px rgba(28,216,128,.18);opacity:0;animation:netpulse 2.2s ease-out infinite}
+.network-monitoring-card--reference .network-monitoring-card__pulse-ring--two{animation-delay:.73s}
+.network-monitoring-card--reference .network-monitoring-card__pulse-ring--three{animation-delay:1.46s}
+.network-monitoring-card--reference .network-monitoring-card__donut:before,.network-monitoring-card--reference .network-monitoring-card__donut:after{content:none!important;display:none!important;animation:none!important}
+.network-monitoring-card--reference .network-monitoring-card__donut{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;width:232px;height:232px;border-radius:50%;box-shadow:0 0 0 5px rgba(255,255,255,.58),0 0 18px rgba(35,126,255,.13);animation:netenter .85s cubic-bezier(.16,1,.3,1) both}
+.network-monitoring-card--reference .network-monitoring-card__donut-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;width:162px;height:162px;padding:10px;border-radius:50%;background:rgba(255,255,255,.97);box-shadow:inset 0 1px 4px rgba(15,23,42,.09);animation:netcenter .9s cubic-bezier(.16,1,.3,1) .12s both}
+.network-monitoring-card--reference .network-monitoring-card__wifi{display:inline-flex;align-items:center;justify-content:center;width:33px;height:33px;margin-bottom:7px;border-radius:50%;background:rgba(42,130,255,.10);box-shadow:0 0 15px rgba(42,130,255,.12);color:#3c91ff;font-size:17px;animation:netwifi 1.5s ease-in-out infinite}
+.network-monitoring-card--reference .network-monitoring-card__donut-center>strong{color:#172033;font-size:38px;font-weight:800;letter-spacing:-.05em;line-height:1}
+.network-monitoring-card--reference .network-monitoring-card__donut-label{margin-top:5px;color:#8a95a7;font-size:11px;line-height:1.2}
+.network-monitoring-card--reference .network-monitoring-card__health{margin-top:8px;padding:4px 7px;border-radius:999px;font-size:8px;font-weight:850;letter-spacing:.08em;line-height:1}
+.network-monitoring-card--reference .network-monitoring-card__health--healthy{background:#d1fae5;color:#047857}
+.network-monitoring-card--reference .network-monitoring-card__health--warning{background:#fef3c7;color:#b45309}
+.network-monitoring-card--reference .network-monitoring-card__health--critical{background:#ffe4e6;color:#be123c}
+.network-monitoring-card--reference .network-monitoring-card__status-area{display:flex;flex-direction:column;align-self:center;min-width:0;gap:11px}
+.network-monitoring-card--reference .network-monitoring-card__status-heading{margin:0 0 3px;color:#8a95a7;font-size:11px}
+.network-monitoring-card--reference .network-monitoring-card__status{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:68px;padding:11px 14px;border:1px solid #cdd6e2;border-radius:13px;background:rgba(248,250,252,.70);color:#172033;cursor:pointer;font-family:inherit;text-align:left;transition:background .22s,box-shadow .22s,transform .22s}
+.network-monitoring-card--reference .network-monitoring-card__status:hover{background:#fff;box-shadow:0 7px 20px rgba(30,50,80,.07);transform:translateX(5px)}
+.network-monitoring-card--reference .network-monitoring-card__status-left{display:inline-flex;align-items:center;gap:11px;min-width:0}
+.network-monitoring-card--reference .network-monitoring-card__status-right{display:grid;align-items:center;flex:0 0 auto;gap:4px;margin-left:8px;text-align:right}
+.network-monitoring-card--reference .network-monitoring-card__status-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:34px;border-radius:9px;font-size:14px}
+.network-monitoring-card--reference .network-monitoring-card__status-text{display:grid;min-width:0;gap:2px}
+.network-monitoring-card--reference .network-monitoring-card__status-text strong{color:#253047;font-size:13px;font-weight:800;line-height:1.15}
+.network-monitoring-card--reference .network-monitoring-card__status-text small{color:#8994a7;font-size:10px;line-height:1.2}
+.network-monitoring-card--reference .network-monitoring-card__status-right strong{font-size:19px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.network-monitoring-card--reference .network-monitoring-card__view-text{display:inline-block;color:#287cff;font-size:11px;font-weight:700;line-height:1.2;white-space:nowrap}
+.network-monitoring-card--reference .network-monitoring-card__status--online .network-monitoring-card__status-icon{background:rgba(24,207,126,.10);color:#19d17e}
+.network-monitoring-card--reference .network-monitoring-card__status--online .network-monitoring-card__status-right strong{color:#13b977}
+.network-monitoring-card--reference .network-monitoring-card__status--offline .network-monitoring-card__status-icon{background:rgba(239,83,80,.09);color:#e65355}
+.network-monitoring-card--reference .network-monitoring-card__status--offline .network-monitoring-card__status-right strong{color:#e55355}
+.network-monitoring-card--reference .network-monitoring-card__status--isolated .network-monitoring-card__status-icon{background:rgba(231,161,36,.10);color:#d99820;font-size:17px;font-weight:850}
+.network-monitoring-card--reference .network-monitoring-card__status--isolated .network-monitoring-card__status-right strong{color:#dc961d}
+.network-monitoring-card--reference .network-monitoring-card__footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 24px;border-top:1px solid #dbe3ed;color:#8a95a7;font-size:10px}
+.network-monitoring-card--reference .network-monitoring-card__footer-live{letter-spacing:0;text-transform:none}
+.network-monitoring-card--reference .network-monitoring-card__footer-live b{color:#18b878;font-weight:800}
+@keyframes netlive{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}@keyframes netglow{0%,100%{opacity:.65;transform:scale(.88)}50%{opacity:1;transform:scale(1.13)}}@keyframes netspin{to{transform:rotate(360deg)}}@keyframes netspinback{from{transform:rotate(360deg)}to{transform:rotate(0)}}@keyframes netpulse{0%{opacity:.75;transform:scale(.65)}100%{opacity:0;transform:scale(1.7)}}@keyframes netenter{from{opacity:0;transform:scale(.76) rotate(-18deg)}to{opacity:1;transform:scale(1) rotate(0)}}@keyframes netcenter{from{opacity:0;transform:scale(.68)}to{opacity:1;transform:scale(1)}}@keyframes netwifi{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.dark .network-monitoring-card--reference{background:rgba(13,18,28,.92);border-color:rgba(53,65,85,.72);box-shadow:0 25px 65px rgba(0,0,0,.38);color:#edf3ff}
+.dark .network-monitoring-card--reference .network-monitoring-card__header,.dark .network-monitoring-card--reference .network-monitoring-card__footer{border-color:rgba(55,67,87,.58)}
+.dark .network-monitoring-card--reference .network-monitoring-card__title,.dark .network-monitoring-card--reference .network-monitoring-card__donut-center>strong,.dark .network-monitoring-card--reference .network-monitoring-card__status-text strong{color:#edf3ff}
+.dark .network-monitoring-card--reference .network-monitoring-card__subtitle,.dark .network-monitoring-card--reference .network-monitoring-card__donut-label,.dark .network-monitoring-card--reference .network-monitoring-card__status-heading,.dark .network-monitoring-card--reference .network-monitoring-card__status-text small,.dark .network-monitoring-card--reference .network-monitoring-card__footer{color:#98a6bb}
+.dark .network-monitoring-card--reference .network-monitoring-card__donut{box-shadow:0 0 0 5px rgba(13,18,28,.78),0 0 22px rgba(35,126,255,.19)}
+.dark .network-monitoring-card--reference .network-monitoring-card__donut-center{background:rgba(13,18,28,.97);box-shadow:inset 0 1px 5px rgba(0,0,0,.42)}
+.dark .network-monitoring-card--reference .network-monitoring-card__status{background:rgba(22,29,42,.78);border-color:rgba(51,64,85,.72)}
+.dark .network-monitoring-card--reference .network-monitoring-card__status:hover{background:rgba(27,37,53,.96);box-shadow:0 7px 22px rgba(0,0,0,.24)}
+.dark .network-monitoring-card--reference .network-monitoring-card__health--healthy{background:rgba(6,78,59,.72);color:#a7f3d0}.dark .network-monitoring-card--reference .network-monitoring-card__health--warning{background:rgba(120,53,15,.72);color:#fde68a}.dark .network-monitoring-card--reference .network-monitoring-card__health--critical{background:rgba(136,19,55,.70);color:#fecdd3}
+@media(max-width:760px){.network-monitoring-card--reference .network-monitoring-card__header{padding:0 16px}.network-monitoring-card--reference .network-monitoring-card__body{grid-template-columns:minmax(8.9rem,.88fr) minmax(0,1.12fr);align-items:center;column-gap:.8rem;min-height:0;padding:1rem}.network-monitoring-card--reference .network-monitoring-card__donut-area{grid-column:1;grid-row:1;width:9.8rem;height:9.8rem}.network-monitoring-card--reference .network-monitoring-card__donut-area:before{width:7.2rem;height:7.2rem}.network-monitoring-card--reference .network-monitoring-card__signal-ring{width:9rem;height:9rem}.network-monitoring-card--reference .network-monitoring-card__pulse-ring{width:5.8rem;height:5.8rem}.network-monitoring-card--reference .network-monitoring-card__donut{width:8.15rem;height:8.15rem}.network-monitoring-card--reference .network-monitoring-card__donut-center{width:5.7rem;height:5.7rem;padding:.35rem}.network-monitoring-card--reference .network-monitoring-card__wifi{width:1.55rem;height:1.55rem;margin-bottom:.22rem;font-size:.78rem}.network-monitoring-card--reference .network-monitoring-card__donut-center>strong{font-size:1.45rem}.network-monitoring-card--reference .network-monitoring-card__donut-label{margin-top:.18rem;font-size:.52rem}.network-monitoring-card--reference .network-monitoring-card__health{margin-top:.3rem;padding:.18rem .3rem;font-size:.38rem}.network-monitoring-card--reference .network-monitoring-card__status-area{grid-column:2;grid-row:1;gap:.4rem;width:100%}.network-monitoring-card--reference .network-monitoring-card__status-heading{margin:0 0 .05rem;font-size:.58rem}.network-monitoring-card--reference .network-monitoring-card__status{min-height:3.5rem;padding:.38rem .45rem;border-radius:.55rem}.network-monitoring-card--reference .network-monitoring-card__status-left{gap:.35rem}.network-monitoring-card--reference .network-monitoring-card__status-icon{flex-basis:1.45rem;width:1.45rem;height:1.45rem;border-radius:.38rem;font-size:.62rem}.network-monitoring-card--reference .network-monitoring-card__status--isolated .network-monitoring-card__status-icon{font-size:.78rem}.network-monitoring-card--reference .network-monitoring-card__status-text{gap:0}.network-monitoring-card--reference .network-monitoring-card__status-text strong{overflow:hidden;font-size:.64rem;text-overflow:ellipsis;white-space:nowrap}.network-monitoring-card--reference .network-monitoring-card__status-text small{display:none}.network-monitoring-card--reference .network-monitoring-card__status-right{align-items:flex-end;gap:.12rem;margin-left:.2rem}.network-monitoring-card--reference .network-monitoring-card__status-right strong{font-size:.88rem}.network-monitoring-card--reference .network-monitoring-card__view-text{display:inline-block;font-size:.55rem;font-weight:750;white-space:nowrap}.network-monitoring-card--reference .network-monitoring-card__status:hover{transform:translateX(2px)}.network-monitoring-card--reference .network-monitoring-card__footer{padding:13px 16px}}
+@media(max-width:380px){.network-monitoring-card--reference .network-monitoring-card__body{grid-template-columns:minmax(7.8rem,.86fr) minmax(0,1.14fr);column-gap:.45rem;padding:.75rem}.network-monitoring-card--reference .network-monitoring-card__donut-area{width:8.6rem;height:8.6rem}.network-monitoring-card--reference .network-monitoring-card__signal-ring{width:7.9rem;height:7.9rem}.network-monitoring-card--reference .network-monitoring-card__pulse-ring{width:5rem;height:5rem}.network-monitoring-card--reference .network-monitoring-card__donut{width:7.15rem;height:7.15rem}.network-monitoring-card--reference .network-monitoring-card__donut-center{width:5rem;height:5rem}.network-monitoring-card--reference .network-monitoring-card__donut-center>strong{font-size:1.2rem}.network-monitoring-card--reference .network-monitoring-card__wifi,.network-monitoring-card--reference .network-monitoring-card__status-icon{display:none}.network-monitoring-card--reference .network-monitoring-card__donut-label{font-size:.47rem}.network-monitoring-card--reference .network-monitoring-card__health{font-size:.34rem}.network-monitoring-card--reference .network-monitoring-card__status{min-height:3.15rem;padding:.3rem .35rem}.network-monitoring-card--reference .network-monitoring-card__status-text strong{font-size:.59rem}.network-monitoring-card--reference .network-monitoring-card__status-right strong{font-size:.78rem}.network-monitoring-card--reference .network-monitoring-card__view-text{font-size:.48rem}}
+@media(prefers-reduced-motion:reduce){.network-monitoring-card--reference *,.network-monitoring-card--reference *:before,.network-monitoring-card--reference *:after{animation:none!important;transition:none!important}}
 
 </style>

@@ -38,3 +38,4 @@
 # Local patch backups
 *.bak_*
 *before_*
+*.bak-*

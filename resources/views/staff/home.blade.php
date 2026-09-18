@@ -26,84 +26,83 @@
         </div>
     </header>
 
-    <section class="customer-summary-card" aria-label="Kondisi pelanggan wilayah">
-        <div class="customer-summary-card__heading">
-            <div class="customer-summary-card__heading-main">
-                <p class="customer-summary-card__eyebrow">MONITORING WILAYAH</p>
-                <span class="customer-summary-card__live">
-                    <i></i>
-                    Real-time
-                </span>
-            </div>
-
-            <div class="customer-summary-card__mobile-total">
-                <span>Total Pelanggan</span>
-                <strong>{{ number_format($totalCustomers, 0, ',', '.') }}</strong>
+@php
+    $networkTotal = max((int) $totalCustomers, 0);
+    $networkOnline = max((int) $onlineCustomers, 0);
+    $networkOffline = max((int) $offlineCustomers, 0);
+    $networkIsolated = max((int) $isolatedCustomers, 0);
+    $networkOnlinePercent = $networkTotal > 0 ? min(($networkOnline / $networkTotal) * 100, 100) : 0;
+    $networkOfflinePercent = $networkTotal > 0 ? min(($networkOffline / $networkTotal) * 100, 100) : 0;
+    $networkOnlineEnd = $networkOnlinePercent;
+    $networkOfflineEnd = min($networkOnlinePercent + $networkOfflinePercent, 100);
+    if ($networkOnlinePercent >= 95) {
+        $networkHealthLabel = "SEHAT";
+        $networkHealthClass = "network-monitoring-card__health--healthy";
+    } elseif ($networkOnlinePercent >= 80) {
+        $networkHealthLabel = "PERHATIAN";
+        $networkHealthClass = "network-monitoring-card__health--warning";
+    } else {
+        $networkHealthLabel = "BURUK";
+        $networkHealthClass = "network-monitoring-card__health--critical";
+    }
+    $networkDonutStyle = sprintf("background: conic-gradient(#10b981 0%% %.4f%%, #f43f5e %.4f%% %.4f%%, #f59e0b %.4f%% 100%%);", $networkOnlineEnd, $networkOnlineEnd, $networkOfflineEnd, $networkOfflineEnd);
+@endphp
+<section class="network-monitoring-card network-monitoring-card--reference" aria-labelledby="network-monitoring-title">
+        <header class="network-monitoring-card__header">
+        <div class="network-monitoring-card__header-left">
+            <p class="network-monitoring-card__subtitle">
+                Status koneksi PPPoE wilayah secara real-time
+            </p>
+        </div>
+        <span class="network-monitoring-card__live" aria-label="Monitoring jaringan aktif">
+            <i></i>
+            Network Live
+        </span>
+    </header>
+    <div class="network-monitoring-card__body">
+        <div class="network-monitoring-card__donut-area">
+            <span class="network-monitoring-card__signal-ring" aria-hidden="true"></span>
+            <span class="network-monitoring-card__pulse-ring" aria-hidden="true"></span>
+            <span class="network-monitoring-card__pulse-ring network-monitoring-card__pulse-ring--two" aria-hidden="true"></span>
+            <span class="network-monitoring-card__pulse-ring network-monitoring-card__pulse-ring--three" aria-hidden="true"></span>
+            <div class="network-monitoring-card__donut" style="{{ $networkDonutStyle }}" role="img" aria-label="{{ number_format($networkOnlinePercent, 1, ",", ".") }} persen pelanggan online">
+                <div class="network-monitoring-card__donut-center">
+                    <span class="network-monitoring-card__wifi" aria-hidden="true">◉</span>
+                    <strong>{{ number_format($networkTotal, 0, ",", ".") }}</strong>
+                    <span class="network-monitoring-card__donut-label">Total Pelanggan</span>
+                    <span class="network-monitoring-card__health {{ $networkHealthClass }}">{{ $networkHealthLabel }}</span>
+                </div>
             </div>
         </div>
-
-        <div class="customer-summary-card__metrics">
-            <article class="customer-metric customer-metric--total">
-                <span class="customer-metric__label">Total Pelanggan</span>
-                <strong class="customer-metric__value">
-                    {{ number_format($totalCustomers, 0, ',', '.') }}
-                </strong>
-                <span class="customer-metric__detail">Wilayah penugasan</span>
-            </article>
-
-            <article class="customer-metric customer-metric--online customer-metric--clickable"
-                     data-customer-status="online"
-                     role="button"
-                     tabindex="0"
-                     aria-label="Lihat daftar pelanggan online">
-                <span class="customer-metric__label">
-                    <i class="customer-metric__dot"></i>
-                    Online
-                </span>
-                <strong class="customer-metric__value">
-                    {{ number_format($onlineCustomers, 0, ',', '.') }}
-                </strong>
-                <span class="customer-metric__detail">
-                    {{ number_format($onlinePercentage, 1, ',', '.') }}% pelanggan
-                </span>
-                <span class="customer-metric__action">Lihat pelanggan →</span>
-            </article>
-
-            <article class="customer-metric customer-metric--offline customer-metric--clickable"
-                     data-customer-status="offline"
-                     role="button"
-                     tabindex="0"
-                     aria-label="Lihat daftar pelanggan offline">
-                <span class="customer-metric__label">
-                    <i class="customer-metric__dot"></i>
-                    Offline
-                </span>
-                <strong class="customer-metric__value">
-                    {{ number_format($offlineCustomers, 0, ',', '.') }}
-                </strong>
-                <span class="customer-metric__detail">
-                    {{ number_format($offlinePercentage, 1, ',', '.') }}% pelanggan
-                </span>
-                <span class="customer-metric__action">Lihat pelanggan →</span>
-            </article>
-
-            <article class="customer-metric customer-metric--isolated customer-metric--clickable"
-                     data-customer-status="isolated"
-                     role="button"
-                     tabindex="0"
-                     aria-label="Lihat daftar pelanggan terisolir">
-                <span class="customer-metric__label">
-                    <i class="customer-metric__dot"></i>
-                    Terisolir
-                </span>
-                <strong class="customer-metric__value">
-                    {{ number_format($isolatedCustomers, 0, ',', '.') }}
-                </strong>
-                <span class="customer-metric__detail">Akses dibatasi</span>
-                <span class="customer-metric__action">Lihat pelanggan →</span>
-            </article>
+        <div class="network-monitoring-card__status-area" aria-label="Rincian status pelanggan">
+            <p class="network-monitoring-card__status-heading">Status pelanggan</p>
+            <button type="button" class="network-monitoring-card__status network-monitoring-card__status--online" data-customer-status="online" aria-label="Lihat daftar pelanggan online">
+                <span class="network-monitoring-card__status-left"><span class="network-monitoring-card__status-icon" aria-hidden="true">●</span><span class="network-monitoring-card__status-text"><strong>Online</strong><small>Terhubung ke MikroTik</small></span></span>
+                <span class="network-monitoring-card__status-right"><strong>{{ number_format($networkOnline, 0, ",", ".") }}</strong><span class="network-monitoring-card__view-text">Lihat Online &gt;</span></span>
+            </button>
+            <button type="button" class="network-monitoring-card__status network-monitoring-card__status--offline" data-customer-status="offline" aria-label="Lihat daftar pelanggan offline">
+                <span class="network-monitoring-card__status-left"><span class="network-monitoring-card__status-icon" aria-hidden="true">●</span><span class="network-monitoring-card__status-text"><strong>Offline</strong><small>Tidak terhubung</small></span></span>
+                <span class="network-monitoring-card__status-right"><strong>{{ number_format($networkOffline, 0, ",", ".") }}</strong><span class="network-monitoring-card__view-text">Lihat Offline &gt;</span></span>
+            </button>
+            <button type="button" class="network-monitoring-card__status network-monitoring-card__status--isolated" data-customer-status="isolated" aria-label="Lihat daftar pelanggan terisolir">
+                <span class="network-monitoring-card__status-left"><span class="network-monitoring-card__status-icon" aria-hidden="true">!</span><span class="network-monitoring-card__status-text"><strong>Terisolir</strong><small>Akses dibatasi billing</small></span></span>
+                <span class="network-monitoring-card__status-right"><strong>{{ number_format($networkIsolated, 0, ",", ".") }}</strong><span class="network-monitoring-card__view-text">Lihat Isolir &gt;</span></span>
+            </button>
         </div>
-    </section>
+    </div>
+    <footer class="network-monitoring-card__footer network-monitoring-card__footer--router">
+        <span class="network-monitoring-card__footer-live">
+            <i></i>
+            MikroTik <b>{{ $mikrotikConnected ?? 'Disconnected' }}</b>
+        </span>
+        <span class="network-monitoring-card__router-metric">
+            CPU <b>{{ isset($mikrotikCpu) ? $mikrotikCpu . '%' : '—' }}</b>
+        </span>
+        <span class="network-monitoring-card__router-metric">
+            Uptime <b>{{ $mikrotikUptime ?? '—' }}</b>
+        </span>
+    </footer>
+</section>
 
     <section class="financial-summary-card financial-summary-card--model-a" aria-labelledby="financial-summary-title">
         <header class="financial-summary-card__header">

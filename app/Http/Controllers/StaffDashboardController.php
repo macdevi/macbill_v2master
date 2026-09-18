@@ -44,6 +44,34 @@ class StaffDashboardController extends Controller
          * Satu username yang aktif di Router A tidak boleh menandai
          * customer dengan username serupa di Router B sebagai online.
          */
+        $routers = $customers->pluck('router')->filter()->unique('id')->values();
+
+        $mikrotikConnected = 'Disconnected';
+        $mikrotikCpu = null;
+        $mikrotikUptime = null;
+
+        foreach ($routers as $router) {
+            try {
+                $resource = $mikrotik->systemResource($router);
+
+                if (is_array($resource)) {
+                    $mikrotikConnected = 'Connected';
+                    $mikrotikCpu = isset($resource['cpu-load'])
+                        ? (int) $resource['cpu-load']
+                        : null;
+                    $mikrotikUptime = $resource['uptime'] ?? null;
+                    break;
+                }
+            } catch (Throwable $e) {
+                Log::warning('Dashboard staff gagal membaca resource MikroTik.', [
+                    'user_id' => $user->id,
+                    'router_id' => $router->id,
+                    'router_name' => $router->name,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $onlineByRouter = [];
 
         foreach ($customers->pluck('router')->filter()->unique('id') as $router) {
@@ -203,6 +231,9 @@ class StaffDashboardController extends Controller
             'pendingRevenue',
             'pendingInvoiceCount',
             'financialMonthLabel',
+            'mikrotikConnected',
+            'mikrotikCpu',
+            'mikrotikUptime',
         ));
     }
 }
