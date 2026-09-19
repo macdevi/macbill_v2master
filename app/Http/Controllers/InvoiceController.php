@@ -39,7 +39,7 @@ class InvoiceController extends Controller
 
         $invoices = Invoice::query()
             ->with('customer')
-            ->when($user?->role === 'admin', function ($query) use ($user) {
+            ->when(in_array($user?->role, ['admin', 'kasir'], true), function ($query) use ($user) {
                 $query->whereHas('customer', function ($customerQuery) use ($user) {
                     $customerQuery->whereIn('area_id', $user->activeAreaIds());
                 });
@@ -100,7 +100,7 @@ class InvoiceController extends Controller
 
         return view('invoices.create', [
             'customers' => Customer::query()
-                ->when($user?->role === 'admin', function ($query) use ($user) {
+                ->when(in_array($user?->role, ['admin', 'kasir'], true), function ($query) use ($user) {
                     $query->whereIn('area_id', $user->activeAreaIds());
                 })
                 ->orderBy('name')
@@ -120,7 +120,7 @@ class InvoiceController extends Controller
 
         return view('invoices.credit-balance', [
             'customers' => Customer::query()
-                ->when($user?->role === 'admin', function ($query) use ($user) {
+                ->when(in_array($user?->role, ['admin', 'kasir'], true), function ($query) use ($user) {
                     $query->whereIn('area_id', $user->activeAreaIds());
                 })
                 ->orderBy('name')
@@ -300,7 +300,7 @@ class InvoiceController extends Controller
     {
         $user = request()->user();
 
-        if ($user?->role !== 'admin') {
+        if (! in_array($user?->role, ['admin', 'kasir'], true)) {
             return;
         }
 
@@ -315,7 +315,7 @@ class InvoiceController extends Controller
     {
         $user = request()->user();
 
-        if ($user?->role !== 'admin') {
+        if (! in_array($user?->role, ['admin', 'kasir'], true)) {
             return;
         }
 
