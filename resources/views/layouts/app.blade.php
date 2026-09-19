@@ -179,6 +179,21 @@
                 'icon' => 'https://img.icons8.com/color/48/dashboard-layout.png',
                 'tone' => 'sky',
             ],
+            {{-- KASIR_MENU_E3 --}}
+            [
+                'label' => 'Pelanggan',
+                'href' => route('customers.index'),
+                'active' => request()->routeIs('customers.*'),
+                'icon' => 'https://img.icons8.com/color/48/conference-call.png',
+                'tone' => 'emerald',
+            ],
+            [
+                'label' => 'Invoice & Pembayaran',
+                'href' => route('invoices.index'),
+                'active' => request()->routeIs('invoices.*'),
+                'icon' => 'https://img.icons8.com/color/48/bill.png',
+                'tone' => 'amber',
+            ],
         ];
 
         $sections = [
