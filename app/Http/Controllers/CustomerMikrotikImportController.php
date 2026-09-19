@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
 class CustomerMikrotikImportController extends Controller
@@ -41,22 +42,16 @@ class CustomerMikrotikImportController extends Controller
             'area_id' => [
                 'required',
                 'integer',
-                Rule::exists('areas', 'id')->where(
-                    fn ($query) => $query->where('active', true)
-                ),
+                $this->areaExistsRule(),
             ],
         ], [
             'area_id.required' => 'Pilih wilayah tujuan import.',
             'area_id.exists' => 'Wilayah tujuan tidak tersedia atau sudah nonaktif.',
         ]);
 
-        $router = Router::query()
-            ->where('active', true)
-            ->findOrFail($data['router_id']);
+        $router = $this->scopedRouterQuery()->findOrFail($data['router_id']);
 
-        $area = Area::query()
-            ->where('active', true)
-            ->findOrFail($data['area_id']);
+        $area = $this->scopedAreaQuery()->findOrFail($data['area_id']);
 
         try {
             $secrets = $mikrotik->allPppoeUsers($router);
@@ -124,9 +119,7 @@ class CustomerMikrotikImportController extends Controller
             'area_id' => [
                 'required',
                 'integer',
-                Rule::exists('areas', 'id')->where(
-                    fn ($query) => $query->where('active', true)
-                ),
+                $this->areaExistsRule(),
             ],
             'customers' => ['required', 'array', 'min:1'],
             'customers.*.selected' => ['nullable', 'in:1'],
@@ -143,13 +136,9 @@ class CustomerMikrotikImportController extends Controller
             'area_id.exists' => 'Wilayah tujuan tidak tersedia atau sudah nonaktif.',
         ]);
 
-        $router = Router::query()
-            ->where('active', true)
-            ->findOrFail($data['router_id']);
+        $router = $this->scopedRouterQuery()->findOrFail($data['router_id']);
 
-        $area = Area::query()
-            ->where('active', true)
-            ->findOrFail($data['area_id']);
+        $area = $this->scopedAreaQuery()->findOrFail($data['area_id']);
 
         $selected = collect($data['customers'])
             ->filter(fn (array $row) => ($row['selected'] ?? null) === '1')
@@ -239,5 +228,46 @@ class CustomerMikrotikImportController extends Controller
         return redirect()
             ->route('customers.index')
             ->with('success', $message);
+    }
+    /**
+     * Daftar area_id yang boleh diakses user. null = super_admin (tanpa batasan).
+     */
+    private function scopedAreaIds(): ?array
+    {
+        $user = auth()->user();
+
+        return $user->isSuperAdmin() ? null : $user->activeAreaIds()->all();
+    }
+
+    private function scopedAreaQuery()
+    {
+        $ids = $this->scopedAreaIds();
+
+        return Area::query()
+            ->where('active', true)
+            ->when($ids !== null, fn ($q) => $q->whereIn('id', $ids));
+    }
+
+    private function scopedRouterQuery()
+    {
+        $ids = $this->scopedAreaIds();
+        static $hasArea = null;
+        $hasArea ??= Schema::hasColumn('routers', 'area_id');
+
+        return Router::query()
+            ->where('active', true)
+            ->when($ids !== null && $hasArea, fn ($q) => $q->whereIn('area_id', $ids));
+    }
+
+    private function areaExistsRule()
+    {
+        $ids = $this->scopedAreaIds();
+
+        return Rule::exists('areas', 'id')->where(function ($query) use ($ids) {
+            $query->where('active', true);
+            if ($ids !== null) {
+                $query->whereIn('id', $ids);
+            }
+        });
     }
 }
