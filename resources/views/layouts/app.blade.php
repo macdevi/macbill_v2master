@@ -179,7 +179,7 @@
                 'icon' => 'https://img.icons8.com/color/48/dashboard-layout.png',
                 'tone' => 'sky',
             ],
-            {{-- KASIR_MENU_E3 --}}
+            // KASIR_MENU_E3
             [
                 'label' => 'Pelanggan',
                 'href' => route('customers.index'),
