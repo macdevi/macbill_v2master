@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Services\MikroTikService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class StaffDashboardController extends Controller
 {
@@ -214,8 +215,26 @@ class StaffDashboardController extends Controller
         $financialMonthLabel = now()->translatedFormat('F Y');
 
 
+        $incomeActivity = DB::table('payments')
+            ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
+            ->join('customers', 'customers.id', '=', 'invoices.customer_id')
+            ->where('payments.status', 'verified')
+            ->whereNotNull('payments.paid_at')
+            ->whereIn('customers.area_id', $areaIds)
+            ->selectRaw("'income' as activity_type, payments.paid_at as activity_date, customers.name as activity_title, invoices.invoice_number as activity_reference, payments.amount as activity_amount");
+
+        $recentFinanceActivity = DB::table('expenses')
+            ->where('status', 'posted')
+            ->whereIn('area_id', $areaIds)
+            ->selectRaw("'expense' as activity_type, expense_date as activity_date, title as activity_title, category as activity_reference, amount as activity_amount")
+            ->unionAll($incomeActivity)
+            ->orderByDesc('activity_date')
+            ->limit(5)
+            ->get();
+
         return view('staff.home', compact(
             'user',
+            'recentFinanceActivity',
             'areas',
             'totalCustomers',
             'onlineCustomers',

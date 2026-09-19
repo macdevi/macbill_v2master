@@ -303,6 +303,49 @@
             </div>
         </section>
 
+        <section class="financial-summary-card financial-summary-card--activity" aria-labelledby="finance-activity-title">
+            <header class="financial-summary-card__header">
+                <div>
+                    <p class="financial-summary-card__eyebrow">KEUANGAN</p>
+                    <h2 id="finance-activity-title" class="financial-summary-card__title">
+                        Riwayat Aktivitas Terbaru
+                    </h2>
+                    <p class="financial-summary-card__period">
+                        5 transaksi terakhir
+                    </p>
+                </div>
+                <a href="{{ route('finance.activity') }}" class="financial-summary-card__badge" style="text-decoration:none;">
+                    <span class="financial-summary-card__badge-dot"></span>
+                    Lihat Semua
+                </a>
+            </header>
+            <div class="financial-summary-card__body">
+                <div class="finance-support-list">
+                    @forelse ($recentFinanceActivity as $activity)
+                        <article class="finance-support-row {{ $activity->activity_type === 'income' ? 'finance-support-row--estimate' : 'finance-support-row--pending' }}">
+                            <span class="finance-support-row__icon" aria-hidden="true">
+                                {{ $activity->activity_type === 'income' ? '+' : '-' }}
+                            </span>
+                            <div class="finance-support-row__content">
+                                <span class="finance-support-row__label">{{ $activity->activity_title }}</span>
+                                <span class="finance-support-row__detail">
+                                    {{ \Carbon\Carbon::parse($activity->activity_date)->translatedFormat('d M Y, H:i') }}
+                                    @if ($activity->activity_reference)
+                                        &middot; {{ $activity->activity_reference }}
+                                    @endif
+                                </span>
+                            </div>
+                            <strong class="finance-support-row__value">
+                                {{ $activity->activity_type === 'income' ? '+ ' : '- ' }}Rp {{ number_format($activity->activity_amount, 0, ',', '.') }}
+                            </strong>
+                        </article>
+                    @empty
+                        <p style="padding: 1rem; color:#94a3b8; text-align:center;">Belum ada aktivitas terbaru.</p>
+                    @endforelse
+                </div>
+            </div>
+        </section>
+
     </div>
 
 

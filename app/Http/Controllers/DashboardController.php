@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use App\Models\Area;
 use App\Models\Customer;
 use App\Models\Expense;
@@ -11,90 +9,121 @@ use App\Models\Router;
 use App\Services\MikroTikService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
-    /**
-     * Query customer yang terlihat oleh user saat ini.
-     * Super Admin melihat global; Admin hanya area assignment aktif.
-     */
     private function visibleCustomerQuery(): Builder
     {
         $user = auth()->user();
-
         $query = Customer::query();
-
         if (!$user || !$user->isSuperAdmin()) {
             $query->whereIn('area_id', $user?->activeAreaIds() ?? []);
         }
-
         return $query;
     }
 
-    /**
-     * Batasi query invoice melalui customer.area_id untuk Admin.
-     */
     private function applyInvoiceAreaScope(Builder $query): Builder
     {
         $user = auth()->user();
-
         if (!$user || !$user->isSuperAdmin()) {
             $areaIds = $user?->activeAreaIds() ?? [];
-
             $query->whereHas('customer', function (Builder $customerQuery) use ($areaIds) {
                 $customerQuery->whereIn('area_id', $areaIds);
             });
         }
-
         return $query;
     }
 
-    /**
-     * Batasi query payment melalui invoice.customer.area_id untuk Admin.
-     */
     private function applyPaymentAreaScope(Builder $query): Builder
     {
         $user = auth()->user();
-
         if (!$user || !$user->isSuperAdmin()) {
             $areaIds = $user?->activeAreaIds() ?? [];
-
             $query->whereHas('invoice.customer', function (Builder $customerQuery) use ($areaIds) {
                 $customerQuery->whereIn('area_id', $areaIds);
             });
         }
-
         return $query;
     }
 
-    /**
-     * Batasi expense langsung memakai area_id.
-     * Expense global (area_id NULL) hanya tampil untuk Super Admin.
-     */
     private function applyExpenseAreaScope(Builder $query): Builder
     {
         $user = auth()->user();
-
         if (!$user || !$user->isSuperAdmin()) {
             $query->whereIn('area_id', $user?->activeAreaIds() ?? []);
         }
-
         return $query;
     }
 
-    /**
-     * Dashboard ringkasan koneksi PPPoE real-time.
-     */
+    private function buildFinanceActivityQuery(): QueryBuilder
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user?->isSuperAdmin() ?? false;
+        $areaIds = $user?->activeAreaIds() ?? [];
+
+        $incomeQuery = DB::table('payments')
+            ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
+            ->join('customers', 'customers.id', '=', 'invoices.customer_id')
+            ->where('payments.status', 'verified')
+            ->whereNotNull('payments.paid_at')
+            ->when(!$isSuperAdmin, function (QueryBuilder $q) use ($areaIds) {
+                $q->whereIn('customers.area_id', $areaIds);
+            })
+            ->select([
+                DB::raw("'income' as activity_type"),
+                'payments.id as activity_id',
+                'payments.paid_at as activity_date',
+                'customers.name as activity_title',
+                'invoices.invoice_number as activity_reference',
+                'payments.method as activity_method',
+                'payments.amount as activity_amount',
+                'payments.status as activity_status',
+            ]);
+
+        $expenseQuery = DB::table('expenses')
+            ->where('status', 'posted')
+            ->when(!$isSuperAdmin, function (QueryBuilder $q) use ($areaIds) {
+                $q->whereIn('area_id', $areaIds);
+            })
+            ->select([
+                DB::raw("'expense' as activity_type"),
+                'id as activity_id',
+                'expense_date as activity_date',
+                'title as activity_title',
+                'category as activity_reference',
+                'payment_method as activity_method',
+                'amount as activity_amount',
+                'status as activity_status',
+            ]);
+
+        return $incomeQuery
+            ->unionAll($expenseQuery)
+            ->orderByDesc('activity_date')
+            ->orderByDesc('activity_id');
+    }
+
+    public function financeActivity(): View
+    {
+        $activities = DB::query()
+            ->fromSub($this->buildFinanceActivityQuery(), 'finance_activity')
+            ->orderByDesc('activity_date')
+            ->orderByDesc('activity_id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('finance.activity', compact('activities'));
+    }
+
     public function index(MikroTikService $mikrotik): View
     {
         $onlineUsernames = [];
-
         $routers = Router::query()
             ->where('active', true)
             ->get();
-
         $mikrotikConnected = 'Disconnected';
         $mikrotikCpu = null;
         $mikrotikUptime = null;
@@ -107,19 +136,17 @@ class DashboardController extends Controller
                     $mikrotikUptime = $data['uptime'] ?? null;
                     break;
                 }
-            } catch (Throwable $e) {
+            } catch (\Throwable $e) {
                 Log::warning('Dashboard gagal membaca resource MikroTik.', ['router_id' => $router->id, 'router_name' => $router->name, 'message' => $e->getMessage()]);
             }
         }
         foreach ($routers as $router) {
             try {
                 $activeUsers = $mikrotik->onlineUsers($router);
-
                 foreach ($activeUsers as $activeUser) {
                     $username = mb_strtolower(
                         trim((string) ($activeUser['name'] ?? ''))
                     );
-
                     if ($username !== '') {
                         $onlineUsernames[$username] = true;
                     }
@@ -132,7 +159,6 @@ class DashboardController extends Controller
                 ]);
             }
         }
-
         $customers = $this->visibleCustomerQuery()
             ->with(['router:id,name'])
             ->select([
@@ -147,16 +173,13 @@ class DashboardController extends Controller
             ])
             ->orderBy('name')
             ->get();
-
         $onlineList = [];
         $offlineList = [];
         $isolatedList = [];
-
         foreach ($customers as $customer) {
             $username = mb_strtolower(trim((string) $customer->pppoe_username));
             $isOnline = $username !== '' && isset($onlineUsernames[$username]);
             $isIsolated = $customer->status === 'isolated';
-
             $customerData = [
                 'id' => $customer->id,
                 'customer_code' => $customer->customer_code,
@@ -165,7 +188,6 @@ class DashboardController extends Controller
                 'pppoe_username' => $customer->pppoe_username,
                 'router_name' => $customer->router?->name,
             ];
-
             if ($isIsolated) {
                 $isolatedList[] = $customerData;
             } elseif ($isOnline) {
@@ -174,30 +196,24 @@ class DashboardController extends Controller
                 $offlineList[] = $customerData;
             }
         }
-
         $totalCustomers = $customers->count();
         $onlineCustomers = count($onlineList);
         $offlineCustomers = count($offlineList);
         $isolatedCustomers = count($isolatedList);
-
         $onlinePercentage = $totalCustomers > 0
             ? round(($onlineCustomers / $totalCustomers) * 100, 1)
             : 0;
-
         $offlinePercentage = $totalCustomers > 0
             ? round(($offlineCustomers / $totalCustomers) * 100, 1)
             : 0;
-
         $customerStatusLists = [
             'online' => $onlineList,
             'offline' => $offlineList,
             'isolated' => $isolatedList,
         ];
-
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
         $today = now()->toDateString();
-
         $currentPeriodInvoices = $this->applyInvoiceAreaScope(
             Invoice::query()
                 ->whereBetween('billing_period', [
@@ -205,9 +221,7 @@ class DashboardController extends Controller
                     $monthEnd->toDateString(),
                 ])
         );
-
         $currentPeriodInvoiceCount = (clone $currentPeriodInvoices)->count();
-
         if ($currentPeriodInvoiceCount > 0) {
             $estimatedRevenue = (float) (clone $currentPeriodInvoices)->sum('amount');
         } else {
@@ -221,7 +235,6 @@ class DashboardController extends Controller
                         : (float) ($customer->internetPackage?->monthly_price ?? 0);
                 });
         }
-
         $monthlyIncome = (float) $this->applyPaymentAreaScope(
             Payment::query()
                 ->where('status', 'verified')
@@ -231,7 +244,6 @@ class DashboardController extends Controller
                     $monthEnd->copy()->endOfDay(),
                 ])
         )->sum('amount');
-
         $monthlyExpense = (float) $this->applyExpenseAreaScope(
             Expense::query()
                 ->where('status', 'posted')
@@ -240,22 +252,24 @@ class DashboardController extends Controller
                     $monthEnd->toDateString(),
                 ])
         )->sum('amount');
-
         $netProfit = $monthlyIncome - $monthlyExpense;
-
         $pendingInvoiceQuery = $this->applyInvoiceAreaScope(
             Invoice::query()
                 ->whereDate('billing_date', '<=', $today)
                 ->whereIn('status', ['unpaid', 'isolated'])
         );
-
         $pendingRevenue = (float) (clone $pendingInvoiceQuery)->sum('amount');
         $pendingInvoiceCount = (int) (clone $pendingInvoiceQuery)->count();
-
         $financialMonthLabel = now()->translatedFormat('F Y');
 
-        $areaFinancialSummaries = collect();
+        $recentFinanceActivity = DB::query()
+            ->fromSub($this->buildFinanceActivityQuery(), 'finance_activity')
+            ->orderByDesc('activity_date')
+            ->orderByDesc('activity_id')
+            ->limit(5)
+            ->get();
 
+        $areaFinancialSummaries = collect();
         if (auth()->user()?->isSuperAdmin()) {
             $customerCountsByArea = Customer::query()
                 ->selectRaw('area_id, COUNT(*) as customer_count')
@@ -263,7 +277,6 @@ class DashboardController extends Controller
                 ->whereIn('status', ['active', 'isolated'])
                 ->groupBy('area_id')
                 ->pluck('customer_count', 'area_id');
-
             $incomeByArea = Payment::query()
                 ->selectRaw('customers.area_id, SUM(payments.amount) as total_income')
                 ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
@@ -277,7 +290,6 @@ class DashboardController extends Controller
                 ])
                 ->groupBy('customers.area_id')
                 ->pluck('total_income', 'customers.area_id');
-
             $expenseByArea = Expense::query()
                 ->selectRaw('area_id, SUM(amount) as total_expense')
                 ->whereNotNull('area_id')
@@ -288,7 +300,6 @@ class DashboardController extends Controller
                 ])
                 ->groupBy('area_id')
                 ->pluck('total_expense', 'area_id');
-
             $pendingByArea = Invoice::query()
                 ->selectRaw('customers.area_id, SUM(invoices.amount) as total_pending, COUNT(*) as pending_invoice_count')
                 ->join('customers', 'customers.id', '=', 'invoices.customer_id')
@@ -298,12 +309,10 @@ class DashboardController extends Controller
                 ->groupBy('customers.area_id')
                 ->get()
                 ->keyBy('area_id');
-
             $areas = Area::query()
                 ->select(['id', 'code', 'name'])
                 ->orderBy('name')
                 ->get();
-
             $areaFinancialSummaries = $areas->map(function (Area $area) use (
                 $customerCountsByArea,
                 $incomeByArea,
@@ -313,7 +322,6 @@ class DashboardController extends Controller
                 $income = (float) ($incomeByArea[$area->id] ?? 0);
                 $expense = (float) ($expenseByArea[$area->id] ?? 0);
                 $pending = $pendingByArea->get($area->id);
-
                 return [
                     'id' => $area->id,
                     'code' => $area->code,
@@ -326,7 +334,6 @@ class DashboardController extends Controller
                     'pending_invoice_count' => (int) ($pending?->pending_invoice_count ?? 0),
                 ];
             })->values();
-
             $globalExpense = (float) Expense::query()
                 ->whereNull('area_id')
                 ->where('status', 'posted')
@@ -335,7 +342,6 @@ class DashboardController extends Controller
                     $monthEnd->toDateString(),
                 ])
                 ->sum('amount');
-
             if ($globalExpense > 0) {
                 $areaFinancialSummaries->push([
                     'id' => null,
@@ -366,6 +372,7 @@ class DashboardController extends Controller
             'pendingInvoiceCount',
             'financialMonthLabel',
             'areaFinancialSummaries',
+            'recentFinanceActivity',
             'mikrotikConnected',
             'mikrotikCpu',
             'mikrotikUptime',

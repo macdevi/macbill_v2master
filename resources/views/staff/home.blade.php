@@ -209,6 +209,28 @@
     </section>
 </div>
 
+<section data-recent-payment-activity class="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+            <p class="text-xs font-bold tracking-wider text-violet-600 dark:text-violet-400">AKTIVITAS KEUANGAN</p>
+            <h2 class="mt-1 text-lg font-bold text-slate-900 dark:text-white">Aktivitas Pembayaran Terbaru</h2>
+        </div>
+        <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">Terverifikasi</span>
+    </div>
+    <div class="divide-y divide-slate-100 dark:divide-slate-800">
+        @forelse ($recentFinanceActivity as $payment)
+            <article class="flex items-center justify-between gap-4 py-3">
+                <div class="min-w-0">
+                    <p class="truncate font-semibold text-slate-800 dark:text-slate-100">{{ $payment->activity_title ?? 'Pelanggan tidak ditemukan' }}</p>
+                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{ $payment->activity_reference ?? 'Invoice tidak tersedia' }} · {{ optional($payment->activity_date)->translatedFormat('d M Y, H:i') }}</p>
+                </div>
+                <strong class="shrink-0 text-sm text-emerald-600 dark:text-emerald-400">+ Rp {{ number_format($payment->activity_amount, 0, ',', '.') }}</strong>
+            </article>
+        @empty
+            <p class="py-6 text-center text-sm text-slate-500 dark:text-slate-400">Belum ada pembayaran terverifikasi untuk wilayah Anda.</p>
+        @endforelse
+    </div>
+</section>
 <div id="customer-status-modal"
      class="customer-status-modal"
      aria-hidden="true"

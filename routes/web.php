@@ -29,6 +29,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/dashboard', [DashboardController::class, 'index'])
         ->middleware('role:super_admin,admin')
         ->name('admin.dashboard');
+    Route::get('/riwayat-keuangan', [DashboardController::class, 'financeActivity'])
+        ->middleware('role:super_admin,admin')
+        ->name('finance.activity');
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
