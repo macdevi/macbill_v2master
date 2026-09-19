@@ -24,6 +24,7 @@ class Router extends Model
         'ssl' => 'boolean',
         'active' => 'boolean',
         'port' => 'integer',
+        'password' => 'encrypted',
     ];
 
     protected $hidden = [
