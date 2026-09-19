@@ -23,17 +23,21 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
-
-            if (($user->role ?? null) === 'super_admin') {
-                return redirect('/dashboard');
-            }
-
-            return redirect('/staff-home');
+            return $this->redirectByRole($user->role ?? null);
         }
 
         return back()->withErrors([
             'username' => 'Username atau password salah.'
         ])->onlyInput('username');
+    }
+
+    private function redirectByRole(?string $role)
+    {
+        return match ($role) {
+            'super_admin' => redirect('/dashboard'),
+            'admin'       => redirect('/admin/dashboard'),
+            default           => redirect('/staff-home'),
+        };
     }
 
     public function logout(Request $request)
