@@ -164,19 +164,19 @@
         <h2 class="db2-finance-v6__title">CATATAN KEUANGAN</h2>
 
         <div class="db2-finance-v6__date">
-            <img src="{{ asset('image/icon/calendar.svg') }}" alt="" width="20" height="20" decoding="async">
+            <img src="{{ asset('icons/calendar-local.png') }}" alt="" width="20" height="20" decoding="async">
             <span>{{ $financialMonthLabel }}</span>
         </div>
     </header>
 
     <section class="db2-profit__hero db2-finance-v6__profit-hero">
         <div class="db2-finance-v6__profit-top">
-            <span class="db2-finance-v6__profit-label"><img src="{{ asset('image/icon/profit.svg') }}" alt="" width="20" height="20" decoding="async">
+            <span class="db2-finance-v6__profit-label"><img src="{{ asset('icons/profit.png') }}" alt="" width="20" height="20" decoding="async">
                 <img src="https://img.icons8.com/fluency/48/profit.png" alt="" width="48" height="48" decoding="async" onerror="this.remove()">
                 Laba bersih
             </span>
 
-            <span class="db2-finance-v6__period-chip"><img src="{{ asset('image/icon/calendar.svg') }}" alt="" width="18" height="18" decoding="async">
+            <span class="db2-finance-v6__period-chip"><img src="{{ asset('icons/calendar-local.png') }}" alt="" width="18" height="18" decoding="async">
                 
                 Bulan ini
             </span>
