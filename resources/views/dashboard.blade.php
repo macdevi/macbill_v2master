@@ -48,7 +48,7 @@
 @endphp
 
 <div class="db2">
-    <header class="db2-welcome">
+    <header class="db2-welcome db2-welcome-card">
         <div>
             <p class="db2-eyebrow">DASHBOARD OPERASIONAL</p>
             <h1 id="dashboard-greeting" class="db2-welcome__title">
@@ -65,103 +65,98 @@
                 </div>
             @endif
         </div>
-
-        <div class="db2-live-chip" aria-label="Pemantauan jaringan aktif">
-            <span class="db2-live-chip__dot"></span>
-            Network live
-        </div>
     </header>
-
     <section class="db2-grid db2-grid--top" aria-label="Ringkasan operasional">
         <article class="db2-card db2-network">
-            <header class="db2-card__header">
+            <header class="db2-card__header db2-network-v2__header">
                 <div>
-                    <p class="db2-eyebrow">JARINGAN</p>
-                    <h2 class="db2-card__title">Status pelanggan PPPoE</h2>
-                    <p class="db2-card__subtitle">
-                        {{ $isAreaDashboard
-                            ? 'Pantau koneksi pelanggan pada wilayah operasional Anda.'
-                            : 'Pantau koneksi pelanggan dan kesehatan jaringan.' }}
-                    </p>
+                    <p class="db2-network-v2__eyebrow">STATUS JARINGAN</p>
                 </div>
-                <span class="db2-health {{ $networkHealthClass }}">{{ $networkHealthLabel }}</span>
+
+                <span class="db2-network-v2__live"><i></i>LIVE</span>
             </header>
 
-            <div class="db2-network__content">
-                <div class="db2-donut-wrap">
-                    <div
-                        class="db2-donut"
-                        style="{{ $networkDonutStyle }}"
-                        role="img"
-                        aria-label="{{ number_format($networkOnlinePercent, 1, ',', '.') }} persen pelanggan online"
-                    >
-                        <div class="db2-donut__inner">
-                            <span class="db2-donut__icon" aria-hidden="true">⌁</span>
-                            <strong>{{ number_format($networkTotal, 0, ',', '.') }}</strong>
-                            <span>Total pelanggan</span>
-                        </div>
-                    </div>
-                    <p class="db2-donut-caption">
-                        <strong>{{ number_format($networkOnlinePercent, 1, ',', '.') }}%</strong> terhubung saat ini
-                    </p>
-                </div>
+            <section class="db2-network-v2__router" aria-label="Status MikroTik">
+                <span class="db2-network-v2__router-icon" aria-hidden="true">
+                    <img src="https://img.icons8.com/fluency/48/router.png" alt="" width="48" height="48" decoding="async">
+</span>
 
-                <div class="db2-status-list" aria-label="Rincian status pelanggan">
-                    <button type="button" class="db2-status db2-status--online" data-customer-status="online" aria-label="Lihat daftar pelanggan online">
-                        <span class="db2-status__mark" aria-hidden="true"></span>
-                        <span class="db2-status__copy">
-                            <strong>Online</strong>
-                            <small>Terhubung ke MikroTik</small>
-                        </span>
-                        <span class="db2-status__value">
-                            {{ number_format($networkOnline, 0, ',', '.') }}
-                            <small>Lihat daftar →</small>
-                        </span>
-                    </button>
+<div class="db2-network-v2__router-copy">
+    <strong>MikroTik Gateway</strong>
+    <span>
+        {{ ($mikrotikConnected ?? '') === 'Connected'
+            ? 'Terhubung ke ' . ($mikrotikIdentity ?: 'MikroTik')
+            : 'Router belum terhubung' }}
+    </span>
+</div>
+            </section>
 
-                    <button type="button" class="db2-status db2-status--offline" data-customer-status="offline" aria-label="Lihat daftar pelanggan offline">
-                        <span class="db2-status__mark" aria-hidden="true"></span>
-                        <span class="db2-status__copy">
-                            <strong>Offline</strong>
-                            <small>Tidak sedang terhubung</small>
-                        </span>
-                        <span class="db2-status__value">
-                            {{ number_format($networkOffline, 0, ',', '.') }}
-                            <small>Lihat daftar →</small>
-                        </span>
-                    </button>
-
-                    <button type="button" class="db2-status db2-status--isolated" data-customer-status="isolated" aria-label="Lihat daftar pelanggan terisolir">
-                        <span class="db2-status__mark" aria-hidden="true">!</span>
-                        <span class="db2-status__copy">
-                            <strong>Terisolir</strong>
-                            <small>Akses dibatasi billing</small>
-                        </span>
-                        <span class="db2-status__value">
-                            {{ number_format($networkIsolated, 0, ',', '.') }}
-                            <small>Lihat daftar →</small>
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            <footer class="db2-router">
-                <div class="db2-router__item">
-                    <span class="db2-router__label">MikroTik</span>
-                    <strong>
-                        <i class="db2-router__dot {{ ($mikrotikConnected ?? '') === 'Connected' ? 'is-connected' : '' }}"></i>
-                        {{ $mikrotikConnected ?? 'Disconnected' }}
+<section class="db2-network-v2__telemetry" aria-label="Telemetry router">
+    <div class="db2-network-v2__metric">
+                    <span class="db2-network-v2__metric-label">Status</span>
+                    <strong class="db2-network-v2__metric-value {{ ($mikrotikConnected ?? '') === 'Connected' ? 'is-good' : '' }}">
+                        {{ ($mikrotikConnected ?? '') === 'Connected' ? 'Online' : 'Offline' }}
                     </strong>
                 </div>
-                <div class="db2-router__item">
-                    <span class="db2-router__label">CPU</span>
-                    <strong>{{ isset($mikrotikCpu) ? $mikrotikCpu . '%' : '—' }}</strong>
+
+                <div class="db2-network-v2__metric">
+                    <span class="db2-network-v2__metric-label">CPU</span>
+                    <strong class="db2-network-v2__metric-value">{{ isset($mikrotikCpu) ? $mikrotikCpu . '%' : '[-]' }}</strong>
+                    @if (isset($mikrotikCpu))
+                        <span class="db2-network-v2__cpu-bar">
+                            <i style="width: {{ min(max((float) $mikrotikCpu, 0), 100) }}%"></i>
+                        </span>
+                    @endif
                 </div>
-                <div class="db2-router__item">
-                    <span class="db2-router__label">Uptime</span>
-                    <strong>{{ $mikrotikUptime ?? '—' }}</strong>
+                <div class="db2-network-v2__metric">
+                    <span class="db2-network-v2__metric-label">Uptime</span>
+                    <strong class="db2-network-v2__metric-value">{{ $mikrotikUptime ?? '-' }}</strong>
                 </div>
-            </footer>
+
+            </section>
+            <div class="db2-network-v2__customer-heading">
+                <strong>MONITORING PELANGGAN</strong>
+                <span>Klik status untuk detail</span>
+            </div>
+
+            <section class="db2-network-v2__customers" aria-label="Ringkasan status pelanggan">
+                <div
+                    class="db2-network-v2__donut"
+                    style="{{ $networkDonutStyle }}"
+                    role="img"
+                    aria-label="{{ number_format($networkOnlinePercent, 1, ',', '.') }} persen pelanggan online"
+                >
+                    <div class="db2-network-v2__donut-inner">
+                        <strong>{{ number_format($networkTotal, 0, ',', '.') }}</strong>
+                        <span>Total pelanggan</span>
+                    </div>
+                </div>
+
+                <div class="db2-network-v2__status-list">
+                    <button type="button" class="db2-network-v2__status db2-network-v2__status--online" data-customer-status="online" aria-label="Lihat daftar pelanggan online">
+                        <span class="db2-network-v2__status-dot" aria-hidden="true"></span>
+                        <span class="db2-network-v2__status-label">Online</span>
+                        <strong class="db2-network-v2__status-count">{{ number_format($networkOnline, 0, ',', '.') }}</strong>
+                        <span class="db2-network-v2__status-action">Lihat ›</span>
+                    </button>
+
+                    <button type="button" class="db2-network-v2__status db2-network-v2__status--offline" data-customer-status="offline" aria-label="Lihat daftar pelanggan offline">
+                        <span class="db2-network-v2__status-dot" aria-hidden="true"></span>
+                        <span class="db2-network-v2__status-label">Offline</span>
+                        <strong class="db2-network-v2__status-count">{{ number_format($networkOffline, 0, ',', '.') }}</strong>
+                        <span class="db2-network-v2__status-action">Lihat ›</span>
+                    </button>
+
+                    <button type="button" class="db2-network-v2__status db2-network-v2__status--isolated" data-customer-status="isolated" aria-label="Lihat daftar pelanggan terisolir">
+                        <span class="db2-network-v2__status-dot" aria-hidden="true"></span>
+                        <span class="db2-network-v2__status-label">Terisolir</span>
+                        <strong class="db2-network-v2__status-count">{{ number_format($networkIsolated, 0, ',', '.') }}</strong>
+                        <span class="db2-network-v2__status-action">Lihat ›</span>
+                    </button>
+                </div>
+            </section>
+
+            <p class="db2-network-v2__updated">Ether1 · [DOWN] <strong>{{ $traffic["download"] ?? "0 bps" }}</strong> · [UP] <strong>{{ $traffic["upload"] ?? "0 bps" }}</strong></p>
         </article>
 
         <article class="db2-card db2-profit db2-finance-v5 {{ $netProfit < 0 ? 'db2-profit--negative' : '' }}">
@@ -169,38 +164,20 @@
         <h2 class="db2-finance-v6__title">CATATAN KEUANGAN</h2>
 
         <div class="db2-finance-v6__date">
-            <img
-                src="https://img.icons8.com/fluency/48/calendar--v1.png"
-                alt=""
-                width="48"
-                height="48"
-                decoding="async"
-            >
+            <img src="{{ asset('image/icon/calendar.svg') }}" alt="" width="20" height="20" decoding="async">
             <span>{{ $financialMonthLabel }}</span>
         </div>
     </header>
 
     <section class="db2-profit__hero db2-finance-v6__profit-hero">
         <div class="db2-finance-v6__profit-top">
-            <span class="db2-finance-v6__profit-label">
-                <img
-                    src="https://img.icons8.com/fluency/48/profit.png"
-                    alt=""
-                    width="48"
-                    height="48"
-                    decoding="async"
-                >
+            <span class="db2-finance-v6__profit-label"><img src="{{ asset('image/icon/profit.svg') }}" alt="" width="20" height="20" decoding="async">
+                <img src="https://img.icons8.com/fluency/48/profit.png" alt="" width="48" height="48" decoding="async" onerror="this.remove()">
                 Laba bersih
             </span>
 
-            <span class="db2-finance-v6__period-chip">
-                <img
-                    src="https://img.icons8.com/fluency/48/calendar--v1.png"
-                    alt=""
-                    width="48"
-                    height="48"
-                    decoding="async"
-                >
+            <span class="db2-finance-v6__period-chip"><img src="{{ asset('image/icon/calendar.svg') }}" alt="" width="18" height="18" decoding="async">
+                
                 Bulan ini
             </span>
         </div>
@@ -224,7 +201,7 @@
 
             <span class="db2-finance-v6__profit-status {{ $netProfit < 0 ? 'is-negative' : ($netProfit > 0 ? 'is-positive' : 'is-neutral') }}">
                 <img
-                    src="https://img.icons8.com/fluency/48/{{ $netProfit < 0 ? 'long-arrow-down' : ($netProfit > 0 ? 'long-arrow-up' : 'horizontal-line') }}.png"
+                    src="https://img.icons8.com/fluency/48/{{ $netProfit < 0 ? 'long-arrow-down' : ($netProfit> 0 ? 'long-arrow-up' : 'horizontal-line') }}.png"
                     alt=""
                     width="48"
                     height="48"
@@ -326,7 +303,7 @@
     </div>
 </article>
 
-</section>
+            </section>
 
     <section class="db2-card db2-activity" aria-labelledby="finance-activity-title">
         <header class="db2-card__header">
@@ -502,7 +479,7 @@
                             @if ($invoice->due_date)
                                 <span>Jatuh tempo {{ $invoice->due_date->translatedFormat('d M Y') }}</span>
                             @else
-                                <span>Tagihan {{ $invoice->billing_date?->translatedFormat('d M Y') ?? '—' }}</span>
+                                <span>Tagihan {{ $invoice->billing_date?->translatedFormat('d M Y') ?? '[-]' }}</span>
                             @endif
 
                             @if (auth()->user()?->isSuperAdmin() && $invoice->customer?->area?->name)
@@ -751,4 +728,5 @@
 
 @include('partials.dashboard-styles')
 @include('partials.dashboard-finance-final')
+@include('partials.dashboard-network-final')
 @endsection

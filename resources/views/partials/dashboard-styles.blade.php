@@ -1846,9 +1846,617 @@
         .fa2-summary--minimal {
             grid-template-columns: 1fr;
         }
+
+
+
+.db2-welcome-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 160px;
+    margin: 0 0 24px;
+    padding: 30px 34px;
+    overflow: hidden;
+    border: 1px solid #bfdbfe;
+    border-left: 6px solid #2563eb;
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at 90% 15%, rgba(96, 165, 250, .32), transparent 28%),
+        radial-gradient(circle at 75% 110%, rgba(45, 212, 191, .16), transparent 36%),
+        linear-gradient(135deg, #f8fbff, #eef6ff 58%, #f0fdfa);
+    box-shadow: 0 14px 34px rgba(30, 64, 175, .10);
+}
+
+.db2-welcome-card::after {
+    content: "";
+    position: absolute;
+    right: -58px;
+    bottom: -98px;
+    width: 220px;
+    height: 220px;
+    border: 34px solid rgba(37, 99, 235, .10);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.db2-welcome-card > div {
+    position: relative;
+    z-index: 1;
+}
+
+.db2-welcome-card .db2-eyebrow {
+    margin-bottom: 9px;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: .15em;
+}
+
+.db2-welcome-card .db2-welcome__title {
+    color: #0f172a;
+    font-size: clamp(26px, 3vw, 36px);
+    font-weight: 850;
+    line-height: 1.12;
+}
+
+.db2-welcome-card .db2-welcome__time {
+    margin-top: 11px;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dark .db2-welcome-card {
+    border-color: rgba(96, 165, 250, .25);
+    border-left-color: #60a5fa;
+    background: linear-gradient(135deg, #172033, #101827);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .25);
+}
+
+.dark .db2-welcome-card .db2-welcome__title {
+    color: #f8fafc;
+}
+
+.dark .db2-welcome-card .db2-welcome__time {
+    color: #94a3b8;
+}
+
+@media (max-width: 640px) {
+    .db2-welcome-card {
+        min-height: 140px;
+        margin-bottom: 18px;
+        padding: 24px 22px;
+        border-radius: 18px;
     }
 
+    .db2-welcome-card .db2-welcome__title {
+        font-size: 26px;
+    }
+}
+/* Network card redesign */
+.db2 .db2-network {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(16, 185, 129, .22);
+    border-top: 4px solid #10b981;
+    border-radius: 18px;
+    background: linear-gradient(145deg, #ffffff, #f0fdf4);
+    box-shadow: 0 12px 28px rgba(15, 118, 110, .09);
+}
+
+.db2 .db2-network::before {
+    content: none;
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, .13);
+}
+
+.db2 .db2-network:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(15, 118, 110, .14);
+}
+
+.dark .db2 .db2-network {
+    border-color: rgba(52, 211, 153, .24);
+    border-top-color: #34d399;
+    background: linear-gradient(145deg, #12221e, #0f1c19);
+}
+/* Financial card redesign */
+.db2 .db2-finance-v5 {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(99, 102, 241, .22);
+    border-top: 4px solid #6366f1;
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .18), transparent 35%),
+        linear-gradient(145deg, #ffffff 0%, #f5f3ff 100%);
+    box-shadow: 0 12px 28px rgba(79, 70, 229, .10);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.db2 .db2-finance-v5:hover {
+    transform: translateY(-2px);
+    border-color: rgba(99, 102, 241, .43);
+    box-shadow: 0 18px 36px rgba(79, 70, 229, .16);
+}
+
+.db2 .db2-finance-v5 .db2-card__title,
+.db2 .db2-finance-v5 .db2-finance-v6__title {
+    color: #312e81;
+}
+
+.db2 .db2-finance-v5 .db2-eyebrow {
+    color: #6366f1;
+}
+
+.db2 .db2-finance-v5 .db2-card__subtitle,
+.db2 .db2-finance-v5 small {
+    color: #667085;
+}
+
+.db2 .db2-finance-v5 .db2-finance-v6__value,
+.db2 .db2-finance-v5 .db2-profit__value,
+.db2 .db2-finance-v5 .db2-finance-v5__value {
+    color: #3730a3;
+    font-weight: 800;
+}
+
+.db2 .db2-finance-v5.db2-profit--negative {
+    border-color: rgba(244, 63, 94, .28);
+    border-top-color: #f43f5e;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(251, 113, 133, .16), transparent 35%),
+        linear-gradient(145deg, #ffffff 0%, #fff1f2 100%);
+    box-shadow: 0 12px 28px rgba(225, 29, 72, .10);
+}
+
+.db2 .db2-finance-v5.db2-profit--negative .db2-card__title,
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__title {
+    color: #9f1239;
+}
+
+.dark .db2 .db2-finance-v5 {
+    border-color: rgba(129, 140, 248, .25);
+    border-top-color: #818cf8;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .14), transparent 35%),
+        linear-gradient(145deg, #191735 0%, #111127 100%);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .24);
+}
+
+.dark .db2 .db2-finance-v5 .db2-card__title,
+.dark .db2 .db2-finance-v5 .db2-finance-v6__title {
+    color: #e0e7ff;
+}
+
+.dark .db2 .db2-finance-v5 .db2-eyebrow {
+    color: #a5b4fc;
+}
+
+.dark .db2 .db2-finance-v5 .db2-card__subtitle,
+.dark .db2 .db2-finance-v5 small {
+    color: #aab0c4;
+}
+
+.dark .db2 .db2-finance-v5 .db2-finance-v6__value,
+.dark .db2 .db2-finance-v5 .db2-profit__value,
+.dark .db2 .db2-finance-v5 .db2-finance-v5__value {
+    color: #c7d2fe;
+}
+
+@media (max-width: 640px) {
+    .db2 .db2-finance-v5 {
+        border-radius: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .db2 .db2-finance-v5 {
+        transition: none;
+    }
+
+    .db2 .db2-finance-v5:hover {
+        transform: none;
+    }
+}
+/* Net-profit visual refinement: colors only, no layout override */
+.db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(99, 102, 241, .15);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .08), transparent 44%),
+        linear-gradient(145deg, rgba(248, 250, 255, .90), rgba(245, 243, 255, .72));
+    box-shadow: inset 3px 0 0 rgba(99, 102, 241, .58);
+}
+
+.db2 .db2-finance-v6__profit-label {
+    color: #4f46e5;
+}
+
+.db2 .db2-finance-v6__profit-amount {
+    color: #3730a3;
+}
+
+.db2 .db2-finance-v6__profit-copy {
+    color: #667085;
+}
+
+.db2 .db2-finance-v6__period-chip {
+    border-color: rgba(99, 102, 241, .14);
+    background: rgba(255, 255, 255, .54);
+    color: #5b5fc7;
+}
+
+.db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(16, 185, 129, .16);
+    background: rgba(236, 253, 245, .62);
+    color: #23825d;
+}
+
+.db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(100, 116, 139, .14);
+    background: rgba(248, 250, 252, .72);
+    color: #64748b;
+}
+
+.db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(244, 63, 94, .16);
+    background: rgba(255, 241, 242, .62);
+    color: #be5369;
+}
+
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-hero {
+    border-color: rgba(244, 63, 94, .15);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(251, 113, 133, .07), transparent 44%),
+        linear-gradient(145deg, rgba(255, 250, 251, .94), rgba(255, 244, 246, .72));
+    box-shadow: inset 3px 0 0 rgba(244, 63, 94, .55);
+}
+
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-label,
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-amount {
+    color: #a9475d;
+}
+
+.dark .db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(129, 140, 248, .19);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .09), transparent 44%),
+        linear-gradient(145deg, rgba(25, 23, 53, .88), rgba(17, 17, 39, .82));
+    box-shadow: inset 3px 0 0 rgba(129, 140, 248, .68);
+}
+
+.dark .db2 .db2-finance-v6__profit-label {
+    color: #b7c0ff;
+}
+
+.dark .db2 .db2-finance-v6__profit-amount {
+    color: #d7dcff;
+}
+
+.dark .db2 .db2-finance-v6__profit-copy {
+    color: #a9afc4;
+}
+
+.dark .db2 .db2-finance-v6__period-chip {
+    border-color: rgba(165, 180, 252, .16);
+    background: rgba(255, 255, 255, .05);
+    color: #bdc5ff;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(52, 211, 153, .18);
+    background: rgba(6, 78, 59, .30);
+    color: #8edeb9;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(148, 163, 184, .18);
+    background: rgba(71, 85, 105, .26);
+    color: #b7c0cc;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(251, 113, 133, .18);
+    background: rgba(136, 19, 55, .25);
+    color: #f0a5b5;
+}
+/* Net-profit visual refinement: colors only, no layout override */
+.db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(99, 102, 241, .15);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .08), transparent 44%),
+        linear-gradient(145deg, rgba(248, 250, 255, .90), rgba(245, 243, 255, .72));
+    box-shadow: inset 3px 0 0 rgba(99, 102, 241, .58);
+}
+
+.db2 .db2-finance-v6__profit-label {
+    color: #4f46e5;
+}
+
+.db2 .db2-finance-v6__profit-amount {
+    color: #3730a3;
+}
+
+.db2 .db2-finance-v6__profit-copy {
+    color: #667085;
+}
+
+.db2 .db2-finance-v6__period-chip {
+    border-color: rgba(99, 102, 241, .14);
+    background: rgba(255, 255, 255, .54);
+    color: #5b5fc7;
+}
+
+.db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(16, 185, 129, .16);
+    background: rgba(236, 253, 245, .62);
+    color: #23825d;
+}
+
+.db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(100, 116, 139, .14);
+    background: rgba(248, 250, 252, .72);
+    color: #64748b;
+}
+
+.db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(244, 63, 94, .16);
+    background: rgba(255, 241, 242, .62);
+    color: #be5369;
+}
+
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-hero {
+    border-color: rgba(244, 63, 94, .15);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(251, 113, 133, .07), transparent 44%),
+        linear-gradient(145deg, rgba(255, 250, 251, .94), rgba(255, 244, 246, .72));
+    box-shadow: inset 3px 0 0 rgba(244, 63, 94, .55);
+}
+
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-label,
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-amount {
+    color: #a9475d;
+}
+
+.dark .db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(129, 140, 248, .19);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .09), transparent 44%),
+        linear-gradient(145deg, rgba(25, 23, 53, .88), rgba(17, 17, 39, .82));
+    box-shadow: inset 3px 0 0 rgba(129, 140, 248, .68);
+}
+
+.dark .db2 .db2-finance-v6__profit-label {
+    color: #b7c0ff;
+}
+
+.dark .db2 .db2-finance-v6__profit-amount {
+    color: #d7dcff;
+}
+
+.dark .db2 .db2-finance-v6__profit-copy {
+    color: #a9afc4;
+}
+
+.dark .db2 .db2-finance-v6__period-chip {
+    border-color: rgba(165, 180, 252, .16);
+    background: rgba(255, 255, 255, .05);
+    color: #bdc5ff;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(52, 211, 153, .18);
+    background: rgba(6, 78, 59, .30);
+    color: #8edeb9;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(148, 163, 184, .18);
+    background: rgba(71, 85, 105, .26);
+    color: #b7c0cc;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(251, 113, 133, .18);
+    background: rgba(136, 19, 55, .25);
+    color: #f0a5b5;
+}
+/* Net-profit visual refinement: colors only, no layout override */
+.db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(99, 102, 241, .15);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .08), transparent 44%),
+        linear-gradient(145deg, rgba(248, 250, 255, .90), rgba(245, 243, 255, .72));
+    box-shadow: inset 3px 0 0 rgba(99, 102, 241, .58);
+}
+
+.db2 .db2-finance-v6__profit-label {
+    color: #4f46e5;
+}
+
+.db2 .db2-finance-v6__profit-amount {
+    color: #3730a3;
+}
+
+.db2 .db2-finance-v6__profit-copy {
+    color: #667085;
+}
+
+.db2 .db2-finance-v6__period-chip {
+    border-color: rgba(99, 102, 241, .14);
+    background: rgba(255, 255, 255, .54);
+    color: #5b5fc7;
+}
+
+.db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(16, 185, 129, .16);
+    background: rgba(236, 253, 245, .62);
+    color: #23825d;
+}
+
+.db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(100, 116, 139, .14);
+    background: rgba(248, 250, 252, .72);
+    color: #64748b;
+}
+
+.db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(244, 63, 94, .16);
+    background: rgba(255, 241, 242, .62);
+    color: #be5369;
+}
+
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-hero {
+    border-color: rgba(244, 63, 94, .15);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(251, 113, 133, .07), transparent 44%),
+        linear-gradient(145deg, rgba(255, 250, 251, .94), rgba(255, 244, 246, .72));
+    box-shadow: inset 3px 0 0 rgba(244, 63, 94, .55);
+}
+
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-label,
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-amount {
+    color: #a9475d;
+}
+
+.dark .db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(129, 140, 248, .19);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .09), transparent 44%),
+        linear-gradient(145deg, rgba(25, 23, 53, .88), rgba(17, 17, 39, .82));
+    box-shadow: inset 3px 0 0 rgba(129, 140, 248, .68);
+}
+
+.dark .db2 .db2-finance-v6__profit-label {
+    color: #b7c0ff;
+}
+
+.dark .db2 .db2-finance-v6__profit-amount {
+    color: #d7dcff;
+}
+
+.dark .db2 .db2-finance-v6__profit-copy {
+    color: #a9afc4;
+}
+
+.dark .db2 .db2-finance-v6__period-chip {
+    border-color: rgba(165, 180, 252, .16);
+    background: rgba(255, 255, 255, .05);
+    color: #bdc5ff;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(52, 211, 153, .18);
+    background: rgba(6, 78, 59, .30);
+    color: #8edeb9;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(148, 163, 184, .18);
+    background: rgba(71, 85, 105, .26);
+    color: #b7c0cc;
+}
+
+.dark .db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(251, 113, 133, .18);
+    background: rgba(136, 19, 55, .25);
+    color: #f0a5b5;
+}
 
 
+/* Net-profit visual refinement */
+.db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(99, 102, 241, .15);
+    background: linear-gradient(145deg, #f8faff, #f5f3ff);
+    box-shadow: inset 3px 0 0 rgba(99, 102, 241, .58);
+}
+.db2 .db2-finance-v6__profit-label { color: #4f46e5; }
+.db2 .db2-finance-v6__profit-amount { color: #3730a3; }
+.db2 .db2-finance-v6__profit-copy { color: #667085; }
+.db2 .db2-finance-v6__period-chip {
+    border-color: rgba(99, 102, 241, .14);
+    background: rgba(255, 255, 255, .54);
+    color: #5b5fc7;
+}
+.db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(16, 185, 129, .16);
+    background: rgba(236, 253, 245, .62);
+    color: #23825d;
+}
+.db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(100, 116, 139, .14);
+    background: rgba(248, 250, 252, .72);
+    color: #64748b;
+}
+.db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(244, 63, 94, .16);
+    background: rgba(255, 241, 242, .62);
+    color: #be5369;
+}
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-hero {
+    border-color: rgba(244, 63, 94, .15);
+    background: linear-gradient(145deg, #fffafb, #fff4f6);
+    box-shadow: inset 3px 0 0 rgba(244, 63, 94, .55);
+}
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-label,
+.db2 .db2-finance-v5.db2-profit--negative .db2-finance-v6__profit-amount {
+    color: #a9475d;
+}
+.dark .db2 .db2-finance-v6__profit-hero {
+    border-color: rgba(129, 140, 248, .19);
+    background: linear-gradient(145deg, #191735, #111127);
+    box-shadow: inset 3px 0 0 rgba(129, 140, 248, .68);
+}
+.dark .db2 .db2-finance-v6__profit-label { color: #b7c0ff; }
+.dark .db2 .db2-finance-v6__profit-amount { color: #d7dcff; }
+.dark .db2 .db2-finance-v6__profit-copy { color: #a9afc4; }
+.dark .db2 .db2-finance-v6__period-chip {
+    border-color: rgba(165, 180, 252, .16);
+    background: rgba(255, 255, 255, .05);
+    color: #bdc5ff;
+}
+.dark .db2 .db2-finance-v6__profit-status.is-positive {
+    border-color: rgba(52, 211, 153, .18);
+    background: rgba(6, 78, 59, .30);
+    color: #8edeb9;
+}
+.dark .db2 .db2-finance-v6__profit-status.is-neutral {
+    border-color: rgba(148, 163, 184, .18);
+    background: rgba(71, 85, 105, .26);
+    color: #b7c0cc;
+}
+.dark .db2 .db2-finance-v6__profit-status.is-negative {
+    border-color: rgba(251, 113, 133, .18);
+    background: rgba(136, 19, 55, .25);
+    color: #f0a5b5;
+}
+/* Net-profit icon rendering fix */
+.db2 .db2-finance-v6__profit-hero img {
+    display: block;
+    flex: 0 0 auto;
+    max-width: none;
+    object-fit: contain;
+    object-position: center;
+}
 
+.db2 .db2-finance-v6__profit-label img {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.db2 .db2-finance-v6__period-chip img {
+    width: 15px !important;
+    height: 15px !important;
+}
+
+.db2 .db2-finance-v6__profit-status img {
+    width: 16px !important;
+    height: 16px !important;
+}
 </style>
