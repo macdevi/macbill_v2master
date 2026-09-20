@@ -750,4 +750,5 @@
 </script>
 
 @include('partials.dashboard-styles')
+@include('partials.dashboard-finance-final')
 @endsection
