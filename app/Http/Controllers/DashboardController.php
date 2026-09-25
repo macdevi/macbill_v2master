@@ -127,15 +127,35 @@ class DashboardController extends Controller
         $mikrotikConnected = 'Disconnected';
         $mikrotikCpu = null;
         $mikrotikUptime = null;
-        foreach ($routers as $router) {
+        $mikrotikIdentity = null;
+       $traffic = [
+    'interface' => 'ether1',
+    'download_bps' => 0,
+    'upload_bps' => 0,
+    'download' => '0 bps',
+    'upload' => '0 bps',
+];
+         foreach ($routers as $router) {
             try {
                 $data = $mikrotik->systemResource($router);
-                if (is_array($data)) {
-                    $mikrotikConnected = 'Connected';
-                    $mikrotikCpu = isset($data['cpu-load']) ? (int) $data['cpu-load'] : null;
-                    $mikrotikUptime = $data['uptime'] ?? null;
-                    break;
-                }
+            if (is_array($data)) {
+    $mikrotikConnected = 'Connected';
+    $mikrotikCpu = isset($data['cpu-load']) ? (int) $data['cpu-load'] : null;
+    $mikrotikUptime = $data['uptime'] ?? null;
+    $mikrotikIdentity = $mikrotik->identity($router);
+
+    try {
+        $traffic = $mikrotik->trafficSummary($router, 'ether1');
+    } catch (Throwable $e) {
+        Log::warning('Dashboard gagal membaca trafik ether1 MikroTik.', [
+            'router_id' => $router->id,
+            'router_name' => $router->name,
+            'message' => $e->getMessage(),
+        ]);
+    }
+
+    break;
+}
             } catch (\Throwable $e) {
                 Log::warning('Dashboard gagal membaca resource MikroTik.', ['router_id' => $router->id, 'router_name' => $router->name, 'message' => $e->getMessage()]);
             }
@@ -260,6 +280,18 @@ class DashboardController extends Controller
         );
         $pendingRevenue = (float) (clone $pendingInvoiceQuery)->sum('amount');
         $pendingInvoiceCount = (int) (clone $pendingInvoiceQuery)->count();
+
+        $pendingInvoiceList = (clone $pendingInvoiceQuery)
+            ->with([
+                'customer:id,area_id,name,phone',
+                'customer.area:id,name',
+            ])
+            ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('due_date')
+            ->orderBy('billing_date')
+            ->limit(15)
+            ->get();
+
         $financialMonthLabel = now()->translatedFormat('F Y');
 
         $recentFinanceActivity = DB::query()
@@ -370,12 +402,15 @@ class DashboardController extends Controller
             'netProfit',
             'pendingRevenue',
             'pendingInvoiceCount',
+            'pendingInvoiceList',
             'financialMonthLabel',
             'areaFinancialSummaries',
             'recentFinanceActivity',
             'mikrotikConnected',
+'traffic',
             'mikrotikCpu',
             'mikrotikUptime',
+            'mikrotikIdentity',
         ));
     }
 }

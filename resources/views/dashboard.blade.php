@@ -305,12 +305,10 @@
 
             </section>
 
-    <section class="db2-card db2-activity" aria-labelledby="finance-activity-title">
+    <section class="db2-card db2-activity">
         <header class="db2-card__header">
             <div>
-                <p class="db2-eyebrow">AKTIVITAS KEUANGAN</p>
-                <h2 id="finance-activity-title" class="db2-card__title">Transaksi terbaru</h2>
-                <p class="db2-card__subtitle">Lima aktivitas keuangan paling baru.</p>
+                <p class="db2-eyebrow">RIWAYAT TRANSAKSI</p>
             </div>
             <a href="{{ route('finance.activity') }}" class="db2-link">Lihat semua <span aria-hidden="true">→</span></a>
         </header>
@@ -318,9 +316,17 @@
         <div class="db2-activity-list">
             @forelse ($recentFinanceActivity as $activity)
                 <article class="db2-activity-row">
-                    <span class="db2-activity-row__icon {{ $activity->activity_type === 'income' ? 'is-income' : 'is-expense' }}" aria-hidden="true">
-                        {{ $activity->activity_type === 'income' ? '+' : '−' }}
+                    <span
+                        class="db2-activity-row__icon {{ $activity->activity_type === 'income' ? 'is-income' : 'is-expense' }}"
+                        aria-hidden="true"
+                    >
+                        <img
+                            src="{{ asset($activity->activity_type === 'income' ? 'icons/arrow-down.png' : 'icons/arrow-up.png') }}"
+                            class="db2-activity-row__icon-image"
+                            alt=""
+                        >
                     </span>
+
                     <div class="db2-activity-row__copy">
                         <strong>{{ $activity->activity_title }}</strong>
                         <span>
@@ -330,6 +336,7 @@
                             @endif
                         </span>
                     </div>
+
                     <strong class="db2-activity-row__amount {{ $activity->activity_type === 'income' ? 'is-income' : 'is-expense' }}">
                         {{ $activity->activity_type === 'income' ? '+ ' : '- ' }}Rp {{ number_format($activity->activity_amount, 0, ',', '.') }}
                     </strong>

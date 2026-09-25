@@ -3,7 +3,7 @@
 @section('title', $expense->exists ? 'Edit Pengeluaran' : 'Tambah Pengeluaran')
 
 @section('content')
-<div class="mx-auto max-w-3xl space-y-6">
+<div class="expense-page expense-form-page mx-auto max-w-3xl space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/10 text-xl text-rose-600 ring-1 ring-rose-500/20 dark:bg-rose-400/10 dark:text-rose-300">

@@ -2459,4 +2459,178 @@
     width: 16px !important;
     height: 16px !important;
 }
+/* Financial activity card refinement */
+.db2 .db2-activity {
+    border-color: rgba(99, 102, 241, .16);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .08), transparent 36%),
+        linear-gradient(145deg, #ffffff 0%, #fafaff 100%);
+    box-shadow: 0 12px 28px rgba(79, 70, 229, .06);
+}
+
+.db2 .db2-activity .db2-eyebrow {
+    color: #6366f1;
+}
+
+.db2 .db2-activity .db2-card__title {
+    color: #312e81;
+}
+
+.db2 .db2-activity .db2-link {
+    padding: 7px 10px;
+    border: 1px solid rgba(99, 102, 241, .16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .68);
+    color: #5b5fc7;
+    font-size: 11px;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.db2 .db2-activity .db2-link:hover {
+    border-color: rgba(99, 102, 241, .28);
+    background: rgba(238, 242, 255, .72);
+    text-decoration: none;
+}
+
+.db2 .db2-activity-list {
+    overflow: hidden;
+    margin-top: 4px;
+    border: 1px solid rgba(99, 102, 241, .10);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .52);
+}
+
+.db2 .db2-activity-row {
+    margin: 0;
+    padding: 13px 14px;
+    border-top-color: rgba(99, 102, 241, .09);
+    transition: background-color .16s ease;
+}
+
+.db2 .db2-activity-row:first-child {
+    padding-top: 13px;
+}
+
+.db2 .db2-activity-row:last-child {
+    padding-bottom: 13px;
+}
+
+.db2 .db2-activity-row:hover {
+    background: rgba(238, 242, 255, .52);
+}
+
+.db2 .db2-activity-row__icon {
+    width: 34px;
+    height: 34px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    font-size: 16px;
+}
+
+.db2 .db2-activity-row__icon.is-income {
+    border-color: rgba(16, 185, 129, .14);
+    background: rgba(236, 253, 245, .76);
+    color: #23825d;
+}
+
+.db2 .db2-activity-row__icon.is-expense {
+    border-color: rgba(244, 63, 94, .14);
+    background: rgba(255, 241, 242, .74);
+    color: #be5369;
+}
+
+.db2 .db2-activity-row__copy {
+    gap: 3px;
+}
+
+.db2 .db2-activity-row__copy strong {
+    color: #28304f;
+    font-size: 13px;
+}
+
+.db2 .db2-activity-row__copy span {
+    color: #75809a;
+    font-size: 11px;
+}
+
+.db2 .db2-activity-row__amount {
+    font-size: 13px;
+    letter-spacing: -.015em;
+}
+
+.db2 .db2-activity .db2-empty {
+    margin: 4px;
+    border-color: rgba(99, 102, 241, .15);
+    background: rgba(248, 250, 255, .70);
+    color: #75809a;
+}
+
+.dark .db2 .db2-activity {
+    border-color: rgba(129, 140, 248, .19);
+    background:
+        radial-gradient(circle at 100% 0%, rgba(129, 140, 248, .10), transparent 38%),
+        linear-gradient(145deg, #191735 0%, #111127 100%);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+}
+
+.dark .db2 .db2-activity .db2-eyebrow {
+    color: #a5b4fc;
+}
+
+.dark .db2 .db2-activity .db2-card__title {
+    color: #e0e7ff;
+}
+
+.dark .db2 .db2-activity .db2-link {
+    border-color: rgba(165, 180, 252, .18);
+    background: rgba(255, 255, 255, .05);
+    color: #bdc5ff;
+}
+
+.dark .db2 .db2-activity-list {
+    border-color: rgba(165, 180, 252, .12);
+    background: rgba(255, 255, 255, .025);
+}
+
+.dark .db2 .db2-activity-row {
+    border-top-color: rgba(165, 180, 252, .10);
+}
+
+.dark .db2 .db2-activity-row:hover {
+    background: rgba(129, 140, 248, .08);
+}
+
+.dark .db2 .db2-activity-row__copy strong {
+    color: #e5e7ff;
+}
+
+.dark .db2 .db2-activity-row__copy span,
+.dark .db2 .db2-activity .db2-empty {
+    color: #a9afc4;
+}
+
+.dark .db2 .db2-activity-row__icon.is-income {
+    border-color: rgba(52, 211, 153, .16);
+    background: rgba(6, 78, 59, .28);
+    color: #8edeb9;
+}
+
+.dark .db2 .db2-activity-row__icon.is-expense {
+    border-color: rgba(251, 113, 133, .16);
+    background: rgba(136, 19, 55, .22);
+    color: #f0a5b5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .db2 .db2-activity-row {
+        transition: none;
+    }
+}
+.db2 .db2-activity-row__icon-image {
+    display: block;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
 </style>
