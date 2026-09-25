@@ -126,57 +126,6 @@ class PaymentController extends Controller
         });
     }
 
-    public function verify(Payment $payment)
-    {
-        if ($payment->status === 'verified') {
-            return back()->with('success', 'Pembayaran sudah berstatus terverifikasi.');
-        }
-
-        DB::transaction(function () use ($payment) {
-            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
-            $invoice = Invoice::query()->lockForUpdate()->findOrFail($payment->invoice_id);
-
-            if ($payment->status === 'verified') {
-                return;
-            }
-
-            $remainingBefore = round((float) $invoice->amount, 2);
-            $paymentAmount = round((float) $payment->amount, 2);
-            $allocatedAmount = round(min($paymentAmount, $remainingBefore), 2);
-            $newRemaining = round(max($remainingBefore - $allocatedAmount, 0), 2);
-
-            $payment->update([
-                'amount' => $allocatedAmount,
-                'status' => 'verified',
-                'verified_at' => now(),
-            ]);
-
-            $invoice->update([
-                'amount' => $newRemaining,
-                'status' => $newRemaining <= 0 ? 'paid' : 'unpaid',
-            ]);
-        });
-
-        return back()->with('success', 'Pembayaran diverifikasi.');
-    }
-
-    public function reject(Payment $payment)
-    {
-        DB::transaction(function () use ($payment) {
-            $payment = Payment::query()->lockForUpdate()->findOrFail($payment->id);
-
-            if ($payment->status === 'verified') {
-                return;
-            }
-
-            $payment->update([
-                'status' => 'rejected',
-            ]);
-        });
-
-        return back()->with('success', 'Pembayaran ditolak.');
-    }
-
     private function authorizeInvoiceAreaForPayment(Invoice $invoice): void
     {
         $user = request()->user();

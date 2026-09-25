@@ -37,3 +37,199 @@ body {
         0 0 0 1px rgba(67, 24, 228, 0.18),
         0 0 24px rgba(126, 87, 255, 0.14);
 }
+
+/* =========================================================
+   Expense pages â€” soft, clear, scoped visual refinement
+   ========================================================= */
+.expense-page {
+    --expense-primary: #4318e4;
+    --expense-primary-soft: rgba(67, 24, 228, .08);
+    --expense-primary-ring: rgba(67, 24, 228, .16);
+    --expense-rose: #e05a72;
+    --expense-rose-soft: rgba(224, 90, 114, .09);
+    --expense-green-line: rgba(16, 185, 129, .18);
+}
+
+.expense-page > .flex:first-child {
+    padding: .25rem 0 .35rem;
+}
+
+.expense-page .bg-cyan-500 {
+    background-color: var(--expense-primary) !important;
+}
+
+.expense-page .hover\:bg-cyan-400:hover {
+    background-color: #5a36e9 !important;
+}
+
+.expense-page .text-cyan-700,
+.expense-page .text-cyan-600 {
+    color: var(--expense-primary) !important;
+}
+
+.expense-page .bg-cyan-50,
+.expense-page .bg-cyan-500\/10 {
+    background-color: var(--expense-primary-soft) !important;
+}
+
+.expense-page .hover\:bg-cyan-50:hover,
+.expense-page .hover\:bg-cyan-100:hover {
+    background-color: rgba(67, 24, 228, .12) !important;
+}
+
+.expense-page .border-cyan-300,
+.expense-page .focus\:border-cyan-400:focus {
+    border-color: rgba(67, 24, 228, .42) !important;
+}
+
+.expense-page .focus\:ring-cyan-300\/30:focus,
+.expense-page .focus\:ring-cyan-200\/60:focus,
+.expense-page .focus\:ring-cyan-300\/40:focus {
+    --tw-ring-color: var(--expense-primary-ring) !important;
+}
+
+.expense-page .rounded-2xl.border.bg-white {
+    border-color: var(--expense-green-line);
+    box-shadow: 0 10px 26px rgba(71, 42, 130, .045);
+}
+
+.expense-page .rounded-2xl.border.bg-white > .divide-y,
+.expense-page .rounded-2xl.border.bg-white > form,
+.expense-page .rounded-2xl.border.bg-white > div {
+    border-color: rgba(67, 24, 228, .075);
+}
+
+.expense-page .expense-page__icon-image {
+    display: block;
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.expense-page .bg-rose-500\/10 {
+    background-color: var(--expense-rose-soft) !important;
+}
+
+.expense-page .text-rose-600,
+.expense-page .text-rose-700 {
+    color: var(--expense-rose) !important;
+}
+
+.expense-page input,
+.expense-page select,
+.expense-page textarea {
+    border-color: rgba(100, 116, 139, .18) !important;
+    background-color: rgba(248, 250, 252, .78) !important;
+    box-shadow: none !important;
+}
+
+.expense-page input:hover,
+.expense-page select:hover,
+.expense-page textarea:hover {
+    border-color: rgba(67, 24, 228, .26) !important;
+}
+
+.expense-page input:focus,
+.expense-page select:focus,
+.expense-page textarea:focus {
+    border-color: rgba(67, 24, 228, .55) !important;
+    background-color: #fff !important;
+    --tw-ring-color: rgba(67, 24, 228, .12) !important;
+}
+
+.expense-page details {
+    border-color: rgba(67, 24, 228, .12) !important;
+    box-shadow: 0 8px 20px rgba(71, 42, 130, .035) !important;
+}
+
+.expense-page details summary {
+    min-height: 3.6rem;
+    color: #475569;
+}
+
+.expense-page details summary > span > span {
+    background: var(--expense-primary-soft) !important;
+    color: var(--expense-primary) !important;
+}
+
+.expense-page article {
+    border-left: 3px solid transparent;
+}
+
+.expense-page article:hover {
+    border-left-color: rgba(67, 24, 228, .34);
+    background-color: rgba(248, 247, 255, .7) !important;
+}
+
+.expense-page .text-slate-900,
+.expense-page .text-slate-800 {
+    color: #25213d !important;
+}
+
+.expense-page .text-xl.font-black {
+    letter-spacing: -.03em;
+}
+
+.expense-page .rounded-md {
+    border-radius: .55rem;
+}
+
+.expense-page .bg-slate-50 {
+    background-color: rgba(248, 250, 252, .76) !important;
+}
+
+.expense-page .bg-slate-100 {
+    background-color: rgba(241, 245, 249, .82) !important;
+}
+
+.dark .expense-page .rounded-2xl.border.bg-white,
+.dark .expense-page details,
+.dark .expense-page form {
+    border-color: rgba(167, 139, 250, .16) !important;
+    background-color: rgba(24, 24, 42, .92) !important;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .16) !important;
+}
+
+.dark .expense-page input,
+.dark .expense-page select,
+.dark .expense-page textarea {
+    border-color: rgba(148, 163, 184, .18) !important;
+    background-color: rgba(15, 23, 42, .56) !important;
+}
+
+.dark .expense-page input:focus,
+.dark .expense-page select:focus,
+.dark .expense-page textarea:focus {
+    border-color: rgba(167, 139, 250, .56) !important;
+    background-color: rgba(15, 23, 42, .86) !important;
+    --tw-ring-color: rgba(167, 139, 250, .14) !important;
+}
+
+.dark .expense-page article:hover {
+    border-left-color: rgba(167, 139, 250, .42);
+    background-color: rgba(139, 92, 246, .07) !important;
+}
+
+.dark .expense-page .text-slate-900,
+.dark .expense-page .text-slate-800 {
+    color: #f1efff !important;
+}
+
+.dark .expense-page .text-cyan-300 {
+    color: #c4b5fd !important;
+}
+
+@media (max-width: 640px) {
+    .expense-page .rounded-2xl.border.bg-white {
+        border-radius: 1rem;
+    }
+
+    .expense-page article {
+        padding: 1rem;
+    }
+
+    .expense-page .expense-page__icon-image {
+        width: 20px;
+        height: 20px;
+    }
+}

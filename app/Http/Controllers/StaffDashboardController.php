@@ -212,6 +212,17 @@ class StaffDashboardController extends Controller
         $pendingRevenue = (float) (clone $pendingInvoiceQuery)->sum('amount');
         $pendingInvoiceCount = (int) (clone $pendingInvoiceQuery)->count();
 
+        $pendingInvoiceList = (clone $pendingInvoiceQuery)
+            ->with([
+                'customer:id,area_id,name,phone',
+                'customer.area:id,name',
+            ])
+            ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('due_date')
+            ->orderBy('billing_date')
+            ->limit(15)
+            ->get();
+
         $financialMonthLabel = now()->translatedFormat('F Y');
 
 
@@ -232,8 +243,15 @@ class StaffDashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('staff.home', compact(
+        $dashboardScope = 'area';
+        $dashboardAreas = $areas->pluck('name')->filter()->values();
+        $areaFinancialSummaries = collect();
+
+        return view('dashboard', compact(
             'user',
+            'dashboardScope',
+            'dashboardAreas',
+            'areaFinancialSummaries',
             'recentFinanceActivity',
             'areas',
             'totalCustomers',
@@ -249,6 +267,7 @@ class StaffDashboardController extends Controller
             'netProfit',
             'pendingRevenue',
             'pendingInvoiceCount',
+            'pendingInvoiceList',
             'financialMonthLabel',
             'mikrotikConnected',
             'mikrotikCpu',

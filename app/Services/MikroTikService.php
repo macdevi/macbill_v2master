@@ -31,6 +31,61 @@ class MikroTikService
         ) > 0;
     }
 
+    public function identity(Router $router): ?string
+    {
+        $rows = $this->client($router)
+            ->query('/system/identity/print')
+            ->read();
+
+        return filled($rows[0]['name'] ?? null)
+            ? (string) $rows[0]['name']
+            : null;
+    }
+    public function interfaces(Router $router): array
+    {
+        return $this->client($router)->query("/interface/print")->read();
+    }
+    public function interfaceTraffic(Router $router, string $interface): array
+    {
+        $query = (new Query('/interface/monitor-traffic'))
+            ->equal('interface', $interface)
+            ->equal('once', 'true');
+
+        $rows = $this->client($router)->query($query)->read();
+
+        return $rows[0] ?? [];
+    }
+
+    public function trafficSummary(Router $router, string $interface = 'ether1'): array
+    {
+        $traffic = $this->interfaceTraffic($router, $interface);
+
+        return [
+            'interface' => $interface,
+            'download_bps' => (int) ($traffic['rx-bits-per-second'] ?? 0),
+            'upload_bps' => (int) ($traffic['tx-bits-per-second'] ?? 0),
+            'download' => $this->formatBits((int) ($traffic['rx-bits-per-second'] ?? 0)),
+            'upload' => $this->formatBits((int) ($traffic['tx-bits-per-second'] ?? 0)),
+        ];
+    }
+
+    private function formatBits(int $bits): string
+    {
+        if ($bits >= 1_000_000_000) {
+            return number_format($bits / 1_000_000_000, 2) . ' Gbps';
+        }
+
+        if ($bits >= 1_000_000) {
+            return number_format($bits / 1_000_000, 2) . ' Mbps';
+        }
+
+        if ($bits >= 1_000) {
+            return number_format($bits / 1_000, 2) . ' Kbps';
+        }
+
+        return number_format($bits) . ' bps';
+    }
+
     public function onlineUsers(Router $router): array
     {
         return $this->client($router)

@@ -371,7 +371,7 @@ class InvoiceController extends Controller
                 if ($finalAmount <= 0) {
                     Payment::create([
                         'invoice_id' => $invoice->id,
-                        'method' => 'cash',
+                        'method' => 'credit_balance',
                         'amount' => $creditUsed,
                         'proof_path' => null,
                         'status' => 'verified',
