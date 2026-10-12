@@ -63,4 +63,18 @@ class Customer extends Model
     {
         return $this->hasMany(Invoice::class);
     }
+
+    public function creditBalanceTransactions(): HasMany
+    {
+        return $this->hasMany(CreditBalanceTransaction::class);
+    }
+
+    public function latestCreditBalanceAdjustment()
+    {
+        return $this->hasOne(CreditBalanceTransaction::class)
+            ->where('type', 'adjustment')
+            ->latestOfMany();
+    }
+
+
 }

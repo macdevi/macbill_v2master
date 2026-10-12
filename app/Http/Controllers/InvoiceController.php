@@ -120,6 +120,7 @@ class InvoiceController extends Controller
 
         return view('invoices.credit-balance', [
             'customers' => Customer::query()
+                ->with('latestCreditBalanceAdjustment.user:id,name')
                 ->when(in_array($user?->role, ['admin', 'kasir'], true), function ($query) use ($user) {
                     $query->whereIn('area_id', $user->activeAreaIds());
                 })
