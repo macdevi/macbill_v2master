@@ -99,6 +99,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::post('/customers/{customer}/credit-balance', [CustomerController::class, 'addCreditBalance'])->name('customers.credit-balance');
+        Route::patch('/customers/{customer}/credit-balance', [CustomerController::class, 'updateCreditBalance'])
+            ->name('customers.credit-balance.update');
 
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
