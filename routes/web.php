@@ -109,3 +109,22 @@ Route::middleware('auth')->group(function () {
         Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store');
     });
 });
+
+
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::get('/pasang-baru', [\App\Http\Controllers\InstallationController::class, 'index'])
+        ->name('installations.index');
+    Route::get('/pasang-baru/create', [\App\Http\Controllers\InstallationController::class, 'create'])
+        ->name('installations.create');
+    Route::post('/pasang-baru', [\App\Http\Controllers\InstallationController::class, 'store'])
+        ->name('installations.store');
+    Route::get('/pasang-baru/{installation}', [\App\Http\Controllers\InstallationController::class, 'show'])
+        ->name('installations.show');
+});
+
+
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::delete('/pasang-baru/{installation}/cancel',
+        [\App\Http\Controllers\InstallationCancellationController::class, 'destroy']
+    )->name('installations.cancel');
+});

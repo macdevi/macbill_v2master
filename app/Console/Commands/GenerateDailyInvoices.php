@@ -42,7 +42,7 @@ class GenerateDailyInvoices extends Command
 
         Customer::query()
             ->with('internetPackage')
-            ->where('status', '!=', 'inactive')
+            ->where('status', 'active')
             ->orderBy('id')
             ->chunkById(100, function ($customers) use (
                 $today,
@@ -80,6 +80,10 @@ class GenerateDailyInvoices extends Command
                                 ->lockForUpdate()
                                 ->findOrFail($customer->id);
 
+                            if ($customer->status !== 'active') {
+                                return null;
+                            }
+
                             $alreadyExists = Invoice::query()
                                 ->where('customer_id', $customer->id)
                                 ->whereDate('billing_period', $periodDate->toDateString())
@@ -90,7 +94,14 @@ class GenerateDailyInvoices extends Command
                             }
 
                             $billingDate = $periodDate->copy()->day($billingDay);
-                            $tax = $billingTax->calculate($customer);
+                            $tax = $billingTax->calculateForBillingPeriod(
+                                $customer,
+                                $periodDate->toDateString()
+                            );
+
+                            if ($tax === null) {
+                                return null;
+                            }
 
                             $availableCredit = round((float) $customer->credit_balance, 2);
                             $grossAmount = round((float) $tax['gross_amount'], 2);
@@ -98,6 +109,7 @@ class GenerateDailyInvoices extends Command
                             $finalAmount = round(max($grossAmount - $creditUsed, 0), 2);
 
                             $invoice = Invoice::create([
+                                ...$tax,
                                 'customer_id' => $customer->id,
                                 'billing_period' => $periodDate->toDateString(),
                                 'invoice_number' => 'INV-' . $period . '-' . str_pad((string) $customer->id, 6, '0', STR_PAD_LEFT),
@@ -121,7 +133,7 @@ class GenerateDailyInvoices extends Command
                                 if ($finalAmount <= 0) {
                                     Payment::create([
                                         'invoice_id' => $invoice->id,
-                                        'method' => 'cash',
+                                        'method' => 'credit_balance',
                                         'amount' => $creditUsed,
                                         'proof_path' => null,
                                         'status' => 'verified',

@@ -200,6 +200,25 @@
             ['title' => null, 'items' => $navItems],
         ];
     }
+    if (in_array($currentUser?->role, ['super_admin', 'admin'], true)) {
+        foreach ($sections as $sectionIndex => $section) {
+            $newItems = [];
+            foreach ($section['items'] as $item) {
+                $newItems[] = $item;
+                if ($item['label'] === 'Pelanggan') {
+                    $newItems[] = [
+                        'label' => 'Pasang Baru',
+                        'href' => route('installations.index'),
+                        'active' => request()->routeIs('installations.*'),
+                        'icon' => $item['icon'],
+                        'tone' => 'sky',
+                    ];
+                }
+            }
+            $sections[$sectionIndex]['items'] = $newItems;
+        }
+    }
+
 @endphp
 
 <div class="flex min-h-screen">

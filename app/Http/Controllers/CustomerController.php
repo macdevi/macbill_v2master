@@ -324,56 +324,58 @@ class CustomerController extends Controller
         );
     }
 
-    public function isolate(Customer $customer, MikroTikService $mikrotik)
-    {
+    public function isolate(
+        Customer $customer,
+        \App\Services\CustomerServiceStateService $state
+    ) {
         $this->authorizeCustomerArea($customer);
+
         try {
-            $activeSessions = $mikrotik->isolate($customer);
-            $customer->update(['status' => 'isolated']);
+            $sessions = $state->isolate($customer);
 
-            ActivityLogController::write(
-                'customer.isolated',
-                "Pelanggan {$customer->name} ({$customer->pppoe_username}) diisolir."
-            );
-
-            $message = count($activeSessions) > 0
-                ? 'Pelanggan diisolir dan '.count($activeSessions).' sesi PPPoE aktif diputus.'
-                : 'Pelanggan diisolir. Tidak ada sesi PPPoE aktif yang perlu diputus.';
+            $message = count($sessions) > 0
+                ? 'Billing diisolir dan '.count($sessions).' sesi PPPoE aktif diputus.'
+                : 'Billing diisolir. Tidak ada sesi PPPoE aktif yang perlu diputus.';
 
             return back()->with('success', $message);
         } catch (\Throwable $e) {
             report($e);
 
+            $billingIsolated = $customer->fresh()?->status === 'isolated';
+
             return back()->with(
                 'error',
-                'Gagal mengisolir pelanggan: '.$e->getMessage()
+                $billingIsolated
+                    ? 'Billing tetap diisolir. Proses router belum berhasil: '.$e->getMessage()
+                    : 'Gagal mengisolir pelanggan: '.$e->getMessage()
             );
         }
     }
 
-    public function activate(Customer $customer, MikroTikService $mikrotik)
-    {
+    public function activate(
+        Customer $customer,
+        \App\Services\CustomerServiceStateService $state
+    ) {
         $this->authorizeCustomerArea($customer);
+
         try {
-            $mikrotik->activate($customer);
-            $customer->update(['status' => 'active']);
+            $changed = $state->activate($customer);
 
-            ActivityLogController::write(
-                'customer.activated',
-                "Pelanggan {$customer->name} ({$customer->pppoe_username}) diaktifkan."
+            return back()->with(
+                'success',
+                $changed
+                    ? 'Pelanggan diaktifkan. Tanggal mulai billing telah dicatat bila sebelumnya diisolir.'
+                    : 'Pelanggan sudah aktif. Tanggal mulai billing tidak diubah.'
             );
-
-            return back()->with('success', 'Pelanggan diaktifkan.');
         } catch (\Throwable $e) {
             report($e);
 
             return back()->with(
                 'error',
-                'Gagal mengaktifkan pelanggan: '.$e->getMessage()
+                'Aktivasi belum selesai. Periksa status billing dan router: '.$e->getMessage()
             );
         }
     }
-
 
     private function authorizeCustomerArea(Customer $customer): void
     {

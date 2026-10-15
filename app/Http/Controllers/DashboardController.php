@@ -59,6 +59,12 @@ class DashboardController extends Controller
         return $query;
     }
 
+    private function psbIncomeQuery(): QueryBuilder
+    {
+        return app(\App\Services\InstallationPaymentService::class)
+            ->visibleIncomeQuery(auth()->user());
+    }
+
     private function buildFinanceActivityQuery(): QueryBuilder
     {
         $user = auth()->user();
@@ -92,7 +98,11 @@ class DashboardController extends Controller
             ->select([
                 DB::raw("'expense' as activity_type"),
                 'id as activity_id',
-                'expense_date as activity_date',
+                DB::raw("CASE
+                    WHEN date(expense_date) = date(created_at)
+                        THEN created_at
+                    ELSE datetime(expense_date)
+                END as activity_date"),
                 'title as activity_title',
                 'category as activity_reference',
                 'payment_method as activity_method',
@@ -100,7 +110,20 @@ class DashboardController extends Controller
                 'status as activity_status',
             ]);
 
+        $psbIncomeQuery = $this->psbIncomeQuery()
+            ->select([
+                DB::raw("'income' as activity_type"),
+                'id as activity_id',
+                'paid_at as activity_date',
+                'customer_name as activity_title',
+                'receipt_number as activity_reference',
+                'method as activity_method',
+                'amount as activity_amount',
+                'status as activity_status',
+            ]);
+
         return $incomeQuery
+            ->unionAll($psbIncomeQuery)
             ->unionAll($expenseQuery)
             ->orderByDesc('activity_date')
             ->orderByDesc('activity_id');
@@ -264,6 +287,12 @@ class DashboardController extends Controller
                     $monthEnd->copy()->endOfDay(),
                 ])
         )->sum('amount');
+        $monthlyIncome += (float) $this->psbIncomeQuery()
+            ->whereBetween('paid_at', [
+                $monthStart->copy()->startOfDay(),
+                $monthEnd->copy()->endOfDay(),
+            ])->sum('amount');
+
         $monthlyExpense = (float) $this->applyExpenseAreaScope(
             Expense::query()
                 ->where('status', 'posted')
@@ -322,6 +351,22 @@ class DashboardController extends Controller
                 ])
                 ->groupBy('customers.area_id')
                 ->pluck('total_income', 'customers.area_id');
+
+            $psbIncomeByArea = $this->psbIncomeQuery()
+                ->whereNotNull('area_id')
+                ->whereBetween('paid_at', [
+                    $monthStart->copy()->startOfDay(),
+                    $monthEnd->copy()->endOfDay(),
+                ])
+                ->selectRaw('area_id, SUM(amount) as total_income')
+                ->groupBy('area_id')
+                ->pluck('total_income', 'area_id');
+
+            foreach ($psbIncomeByArea as $areaId => $amount) {
+                $incomeByArea[$areaId] =
+                    (float) ($incomeByArea[$areaId] ?? 0) + (float) $amount;
+            }
+
             $expenseByArea = Expense::query()
                 ->selectRaw('area_id, SUM(amount) as total_expense')
                 ->whereNotNull('area_id')

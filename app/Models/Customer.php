@@ -23,10 +23,16 @@ class Customer extends Model
         'due_day',
         'status',
         'credit_balance',
+        'service_activated_on',
+        'first_billing_on',
     ];
 
     protected $casts = [
         'due_day' => 'integer',
+        'isolated_at' => 'datetime',
+        'billing_resumed_on' => 'date',
+        'service_activated_on' => 'date',
+        'first_billing_on' => 'date',
         'monthly_price_override' => 'decimal:2',
         'credit_balance' => 'decimal:2',
     ];

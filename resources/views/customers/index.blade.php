@@ -77,7 +77,8 @@
         </div>
     @endif
 
-    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
+    {{-- customer-dropdown-layout-v2 --}}
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
         <div class="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
             <div class="mb-3 flex items-center justify-between gap-3">
                 <div>
@@ -100,7 +101,7 @@
             </div>
         </div>
 
-        <div class="space-y-3 bg-slate-50 p-3 dark:bg-slate-950">
+        <div class="space-y-3 rounded-b-2xl bg-slate-50 p-3 dark:bg-slate-950">
             @forelse($customers as $c)
                 @php
                     $packageName = optional($c->internetPackage)->name ?: 'Belum ada paket';
@@ -116,7 +117,7 @@
                             : 'border-slate-200 bg-white hover:border-cyan-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-cyan-500/60 dark:hover:bg-slate-800');
                 @endphp
 
-                <article x-show="!search || $el.innerText.toLowerCase().includes(search.toLowerCase())" x-transition.opacity class="rounded-2xl border p-4 shadow-sm transition {{ $customerCardClass }}">
+                <article x-show="!search || $el.innerText.toLowerCase().includes(search.toLowerCase())" x-transition.opacity class="relative rounded-2xl border p-4 shadow-sm transition {{ $customerCardClass }}">
                     <div class="flex gap-3">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $isIsolated ? 'bg-rose-500/10 text-rose-600 dark:bg-rose-400/10 dark:text-rose-300' : ($isInactive ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300' : 'bg-cyan-500/10 text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-300') }}">
                             <span class="text-base font-black">{{ strtoupper(substr($c->name ?: '?', 0, 1)) }}</span>
@@ -146,10 +147,10 @@
                                         @endif
                                     </div>
 
-                                    <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
-                                        <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-haspopup="menu" aria-label="Buka aksi pelanggan" class="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-cyan-300/30 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:focus:ring-cyan-400/15">⋮</button>
+                                    <div class="relative" x-data="{ open: false, dropUp: false }" @click.outside="open = false" @keydown.escape.window="open = false" @resize.window="open = false">
+                                        <button type="button" @click="dropUp = (window.innerHeight - $el.getBoundingClientRect().bottom < 280) && ($el.getBoundingClientRect().top > 280); open = !open" :aria-expanded="open.toString()" aria-haspopup="menu" aria-label="Buka aksi pelanggan" class="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-cyan-300/30 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:focus:ring-cyan-400/15">⋮</button>
 
-                                        <div x-cloak x-show="open" x-transition.origin.top.right role="menu" class="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
+                                        <div x-cloak x-show="open" x-transition.opacity :class="dropUp ? 'bottom-full mb-2' : 'top-full mt-2'" role="menu" class="absolute right-0 z-50 w-48 max-w-[calc(100vw-2rem)] max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40">
                                             <button type="button" @click="detailId = {{ $c->id }}; detailOpen = true; open = false" role="menuitem" class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Detail</button>
                                             <a href="{{ route('customers.edit', $c) }}" role="menuitem" class="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Edit</a>
 
