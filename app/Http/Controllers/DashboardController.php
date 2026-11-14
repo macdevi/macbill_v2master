@@ -5,14 +5,11 @@ use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\Router;
 use App\Services\MikroTikService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {

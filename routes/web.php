@@ -29,7 +29,6 @@ Route::middleware('auth')->group(function () {
     // ---------- SUPER ADMIN saja ----------
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/api/dashboard/pppoe', [DashboardController::class, 'pppoe'])->name('dashboard.pppoe');
 
 
         Route::resource('packages', PackageController::class)->except(['index', 'show']);
