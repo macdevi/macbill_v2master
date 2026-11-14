@@ -10,6 +10,8 @@ use App\Models\Customer;
 use App\Models\InternetPackage;
 use App\Models\Router;
 use Illuminate\Http\Request;
+use App\Services\CustomerAccessScope;
+use Throwable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -19,7 +21,7 @@ class CustomerExcelController extends Controller
     public function export()
     {
         return Excel::download(
-            new CustomerExcelExport(),
+            new CustomerExcelExport(CustomerAccessScope::areaIds()),
             'pelanggan-'.now()->format('Y-m-d_His').'.xlsx'
         );
     }
@@ -119,15 +121,12 @@ class CustomerExcelController extends Controller
             ]);
         }
 
-        $routers = Router::query()
-            ->where('active', true)
-            ->get()
-            ->keyBy(fn ($router) => mb_strtolower(trim($router->name)));
+        $routers = CustomerAccessScope::routers()->get()
+            ->groupBy(fn ($router) => mb_strtolower(trim($router->name)));
 
-        $packages = InternetPackage::query()
-            ->where('active', true)
-            ->get()
-            ->keyBy(fn ($package) => mb_strtolower(trim($package->name)));
+        $packages = InternetPackage::with('routers')
+            ->where('active', true)->get()
+            ->groupBy(fn ($package) => mb_strtolower(trim($package->name)));
 
         $existingUsernames = Customer::query()
             ->pluck('pppoe_username')
@@ -229,15 +228,24 @@ class CustomerExcelController extends Controller
             $packageKey = mb_strtolower($packageName);
             $usernameKey = mb_strtolower($username);
 
-            if (!isset($routers[$routerKey])) {
-                $errors[] = 'Baris '.$excelRow.': router "'.$routerName.'" tidak ditemukan atau tidak aktif.';
+            $routerMatches = $routers->get($routerKey, collect());
+            if ($routerMatches->count() !== 1) {
+                $errors[] = 'Baris '.$excelRow.': router tidak tersedia dalam akses Anda, nonaktif, atau namanya ambigu.';
                 continue;
             }
-
-            if (!isset($packages[$packageKey])) {
-                $errors[] = 'Baris '.$excelRow.': package "'.$packageName.'" tidak ditemukan atau tidak aktif.';
+            $matchedRouter = $routerMatches->first();
+            if (!CustomerAccessScope::routerSupportsArea((int)$matchedRouter->id,(int)$area->id)) {
+                $errors[] = 'Baris '.$excelRow.': router tidak terhubung ke wilayah tujuan impor.';
                 continue;
             }
+            $packageMatches = $packages->get($packageKey, collect())->filter(
+                fn ($package) => $package->routers->contains('id', $matchedRouter->id)
+            );
+            if ($packageMatches->count() !== 1) {
+                $errors[] = 'Baris '.$excelRow.': paket tidak tersedia pada router pilihan atau namanya ambigu pada router tersebut.';
+                continue;
+            }
+            $matchedPackage = $packageMatches->first();
 
             if (isset($existingUsernames[$usernameKey])) {
                 $errors[] = 'Baris '.$excelRow.': username PPPoE "'.$username.'" sudah terdaftar.';
@@ -253,8 +261,8 @@ class CustomerExcelController extends Controller
 
             $validRows[] = [
                 'area_id' => $area->id,
-                'router_id' => $routers[$routerKey]->id,
-                'internet_package_id' => $packages[$packageKey]->id,
+                'router_id' => $matchedRouter->id,
+                'internet_package_id' => $matchedPackage->id,
                 'monthly_price_override' => $monthlyPriceOverride,
                 'tax_mode' => $taxMode,
                 'customer_code' => 'CUST-'.strtoupper(Str::random(8)),

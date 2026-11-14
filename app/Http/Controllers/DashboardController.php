@@ -143,117 +143,26 @@ class DashboardController extends Controller
 
     public function index(MikroTikService $mikrotik): View
     {
-        $onlineUsernames = [];
-        $routers = Router::query()
-            ->where('active', true)
-            ->get();
-        $mikrotikConnected = 'Disconnected';
-        $mikrotikCpu = null;
-        $mikrotikUptime = null;
-        $mikrotikIdentity = null;
-       $traffic = [
-    'interface' => 'ether1',
-    'download_bps' => 0,
-    'upload_bps' => 0,
-    'download' => '0 bps',
-    'upload' => '0 bps',
-];
-         foreach ($routers as $router) {
-            try {
-                $data = $mikrotik->systemResource($router);
-            if (is_array($data)) {
-    $mikrotikConnected = 'Connected';
-    $mikrotikCpu = isset($data['cpu-load']) ? (int) $data['cpu-load'] : null;
-    $mikrotikUptime = $data['uptime'] ?? null;
-    $mikrotikIdentity = $mikrotik->identity($router);
-
-    try {
-        $traffic = $mikrotik->trafficSummary($router, 'ether1');
-    } catch (Throwable $e) {
-        Log::warning('Dashboard gagal membaca trafik ether1 MikroTik.', [
-            'router_id' => $router->id,
-            'router_name' => $router->name,
-            'message' => $e->getMessage(),
-        ]);
-    }
-
-    break;
-}
-            } catch (\Throwable $e) {
-                Log::warning('Dashboard gagal membaca resource MikroTik.', ['router_id' => $router->id, 'router_name' => $router->name, 'message' => $e->getMessage()]);
-            }
-        }
-        foreach ($routers as $router) {
-            try {
-                $activeUsers = $mikrotik->onlineUsers($router);
-                foreach ($activeUsers as $activeUser) {
-                    $username = mb_strtolower(
-                        trim((string) ($activeUser['name'] ?? ''))
-                    );
-                    if ($username !== '') {
-                        $onlineUsernames[$username] = true;
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Dashboard gagal membaca PPPoE aktif dari MikroTik.', [
-                    'router_id' => $router->id,
-                    'router_name' => $router->name,
-                    'message' => $e->getMessage(),
-                ]);
-            }
-        }
-        $customers = $this->visibleCustomerQuery()
-            ->with(['router:id,name'])
-            ->select([
-                'id',
-                'area_id',
-                'router_id',
-                'customer_code',
-                'name',
-                'phone',
-                'pppoe_username',
-                'status',
-            ])
-            ->orderBy('name')
-            ->get();
-        $onlineList = [];
-        $offlineList = [];
-        $isolatedList = [];
-        foreach ($customers as $customer) {
-            $username = mb_strtolower(trim((string) $customer->pppoe_username));
-            $isOnline = $username !== '' && isset($onlineUsernames[$username]);
-            $isIsolated = $customer->status === 'isolated';
-            $customerData = [
-                'id' => $customer->id,
-                'customer_code' => $customer->customer_code,
-                'name' => $customer->name,
-                'phone' => $customer->phone,
-                'pppoe_username' => $customer->pppoe_username,
-                'router_name' => $customer->router?->name,
-            ];
-            if ($isIsolated) {
-                $isolatedList[] = $customerData;
-            } elseif ($isOnline) {
-                $onlineList[] = $customerData;
-            } else {
-                $offlineList[] = $customerData;
-            }
-        }
-        $totalCustomers = $customers->count();
-        $onlineCustomers = count($onlineList);
-        $offlineCustomers = count($offlineList);
-        $isolatedCustomers = count($isolatedList);
-        $onlinePercentage = $totalCustomers > 0
-            ? round(($onlineCustomers / $totalCustomers) * 100, 1)
-            : 0;
-        $offlinePercentage = $totalCustomers > 0
-            ? round(($offlineCustomers / $totalCustomers) * 100, 1)
-            : 0;
-        $customerStatusLists = [
-            'online' => $onlineList,
-            'offline' => $offlineList,
-            'isolated' => $isolatedList,
-        ];
+        $network=app(\App\Services\DashboardNetworkService::class)
+            ->snapshot(auth()->user()?->isSuperAdmin() ? request()->query('router_id') : null,$mikrotik);
+        $monitorRouters=$network['monitorRouters'];
+        $selectedMonitorRouter=$network['selectedMonitorRouter'];
+        $mikrotikConnected=$network['mikrotikConnected'];
+        $mikrotikCpu=$network['mikrotikCpu'];
+        $mikrotikUptime=$network['mikrotikUptime'];
+        $mikrotikIdentity=$network['mikrotikIdentity'];
+        $traffic=$network['traffic'];
+        $totalCustomers=$network['totalCustomers'];
+        $onlineCustomers=$network['onlineCustomers'];
+        $offlineCustomers=$network['offlineCustomers'];
+        $isolatedCustomers=$network['isolatedCustomers'];
+        $unknownCustomers=$network['unknownCustomers'];
+        $onlinePercentage=$network['onlinePercentage'];
+        $offlinePercentage=$network['offlinePercentage'];
+        $customerStatusLists=$network['customerStatusLists'];
+        $networkCheckedAt=$network['networkCheckedAt'];
+        $dashboardScope=auth()->user()?->isSuperAdmin()?'global':'area';
+        $dashboardAreas=\App\Services\CustomerAccessScope::areas()->orderBy('name')->pluck('name');
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
         $today = now()->toDateString();
@@ -441,6 +350,12 @@ class DashboardController extends Controller
             'onlinePercentage',
             'offlinePercentage',
             'customerStatusLists',
+            'monitorRouters',
+            'selectedMonitorRouter',
+            'unknownCustomers',
+            'networkCheckedAt',
+            'dashboardScope',
+            'dashboardAreas',
             'estimatedRevenue',
             'monthlyIncome',
             'monthlyExpense',

@@ -13,6 +13,10 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class CustomerExcelExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
 {
+    public function __construct(private ?array $areaIds = [])
+    {
+    }
+
     public function collection(): Collection
     {
         return Customer::query()
@@ -21,6 +25,7 @@ class CustomerExcelExport implements FromCollection, WithHeadings, WithMapping, 
                 'router:id,name,host',
                 'internetPackage:id,name,monthly_price',
             ])
+            ->when($this->areaIds !== null, fn ($q) => $q->whereIn('area_id', $this->areaIds))
             ->orderBy('name')
             ->get();
     }

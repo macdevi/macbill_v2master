@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Schema;
 use RuntimeException;
+use App\Services\CustomerAccessScope;
+use Illuminate\Support\Facades\Validator;
 
 class CustomerMikrotikImportController extends Controller
 {
@@ -24,14 +26,8 @@ class CustomerMikrotikImportController extends Controller
     public function index()
     {
         return view('customers.import-mikrotik', [
-            'routers' => Router::query()
-                ->where('active', true)
-                ->orderBy('name')
-                ->get(),
-            'areas' => Area::query()
-                ->where('active', true)
-                ->orderBy('name')
-                ->get(['id', 'code', 'name']),
+            'routers' => $this->scopedRouterQuery()->orderBy('name')->get(),
+            'areas' => $this->scopedAreaQuery()->orderBy('name')->get(['id', 'code', 'name']),
         ]);
     }
 
@@ -52,6 +48,12 @@ class CustomerMikrotikImportController extends Controller
         $router = $this->scopedRouterQuery()->findOrFail($data['router_id']);
 
         $area = $this->scopedAreaQuery()->findOrFail($data['area_id']);
+        if (!CustomerAccessScope::routerSupportsArea((int)$router->id,(int)$area->id)) {
+            return redirect()->route('customers.import.mikrotik')
+                ->withErrors(['router_id'=>'Router tidak terhubung ke wilayah tujuan yang dipilih.'])
+                ->withInput($request->only('router_id','area_id'));
+        }
+
 
         try {
             $secrets = $mikrotik->allPppoeUsers($router);
@@ -70,6 +72,8 @@ class CustomerMikrotikImportController extends Controller
                 mb_strtolower(trim((string) $username)) => $id,
             ])
             ->all();
+
+        $visibleIds = CustomerAccessScope::customers(Customer::query())->pluck('id')->flip()->all();
 
         $seen = [];
         $records = [];
@@ -90,12 +94,15 @@ class CustomerMikrotikImportController extends Controller
 
             $seen[$key] = true;
 
+            $existingId = $existingUsernames[$key] ?? null;
+            $outsideArea = $existingId !== null && !isset($visibleIds[$existingId]);
             $records[] = [
                 'username' => $username,
-                'password' => (string) ($secret['password'] ?? ''),
-                'profile' => trim((string) ($secret['profile'] ?? '')),
+                'name' => $this->cleanImportedCustomerName($username),
+                'password' => $outsideArea ? '' : (string) ($secret['password'] ?? ''),
+                'profile' => $outsideArea ? '' : trim((string) ($secret['profile'] ?? '')),
                 'disabled' => strtolower(trim((string) ($secret['disabled'] ?? 'no'))) === 'yes',
-                'existing_customer_id' => $existingUsernames[$key] ?? null,
+                'existing_customer_id' => $outsideArea ? -1 : $existingId,
             ];
         }
 
@@ -107,6 +114,7 @@ class CustomerMikrotikImportController extends Controller
             'records' => $records,
             'packages' => InternetPackage::query()
                 ->where('active', true)
+                ->availableForRouter((int) $router->id)
                 ->orderBy('monthly_price')
                 ->get(),
         ]);
@@ -114,7 +122,7 @@ class CustomerMikrotikImportController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'router_id' => ['required', 'integer', 'exists:routers,id'],
             'area_id' => [
                 'required',
@@ -135,19 +143,30 @@ class CustomerMikrotikImportController extends Controller
             'area_id.required' => 'Wilayah tujuan import wajib dipilih.',
             'area_id.exists' => 'Wilayah tujuan tidak tersedia atau sudah nonaktif.',
         ]);
+        if ($validator->fails()) {
+            return redirect()->route('customers.import.mikrotik')
+                ->withErrors($validator)->withInput($request->only('router_id', 'area_id'));
+        }
+        $data = $validator->validated();
 
         $router = $this->scopedRouterQuery()->findOrFail($data['router_id']);
 
         $area = $this->scopedAreaQuery()->findOrFail($data['area_id']);
+        if (!CustomerAccessScope::routerSupportsArea((int)$router->id,(int)$area->id)) {
+            return redirect()->route('customers.import.mikrotik')
+                ->withErrors(['router_id'=>'Router tidak terhubung ke wilayah tujuan yang dipilih.'])
+                ->withInput($request->only('router_id','area_id'));
+        }
+
 
         $selected = collect($data['customers'])
             ->filter(fn (array $row) => ($row['selected'] ?? null) === '1')
             ->values();
 
         if ($selected->isEmpty()) {
-            return back()->withErrors([
+            return redirect()->route('customers.import.mikrotik')->withErrors([
                 'customers' => 'Pilih minimal satu pelanggan untuk diimpor.',
-            ])->withInput();
+            ])->withInput($request->only('router_id', 'area_id'));
         }
 
         $errors = [];
@@ -160,6 +179,9 @@ class CustomerMikrotikImportController extends Controller
                 $username = trim((string) ($row['pppoe_username'] ?? ''));
                 $password = (string) ($row['pppoe_password'] ?? '');
                 $name = trim((string) ($row['name'] ?? ''));
+                if ($name === '') {
+                    $name = $this->cleanImportedCustomerName($username);
+                }
                 $phone = trim((string) ($row['phone'] ?? ''));
                 $address = trim((string) ($row['address'] ?? ''));
                 $packageId = $row['internet_package_id'] ?? null;
@@ -187,9 +209,10 @@ class CustomerMikrotikImportController extends Controller
 
                 if (!InternetPackage::query()
                     ->where('active', true)
+                    ->availableForRouter((int) $router->id)
                     ->whereKey($packageId)
                     ->exists()) {
-                    $errors[] = 'Paket untuk '.$username.' tidak valid atau tidak aktif.';
+                    $errors[] = 'Paket untuk '.$username.' tidak aktif atau tidak tersedia pada router sumber.';
                     continue;
                 }
 
@@ -210,15 +233,14 @@ class CustomerMikrotikImportController extends Controller
                 $created++;
             }
 
-            if ($created === 0) {
-                throw new RuntimeException(
-                    $errors !== []
-                        ? implode(' ', $errors)
-                        : 'Tidak ada pelanggan yang berhasil diimpor.'
-                );
-            }
+
         });
 
+        if ($created === 0) {
+            return redirect()->route('customers.import.mikrotik')
+                ->withErrors(['customers' => $errors !== [] ? implode(' ', $errors) : 'Tidak ada pelanggan yang dapat diimpor.'])
+                ->withInput($request->only('router_id', 'area_id'));
+        }
         $message = $created.' pelanggan berhasil diimpor ke wilayah '.$area->name.'.';
 
         if ($errors !== []) {
@@ -232,6 +254,7 @@ class CustomerMikrotikImportController extends Controller
     /**
      * Daftar area_id yang boleh diakses user. null = super_admin (tanpa batasan).
      */
+
     private function scopedAreaIds(): ?array
     {
         $user = auth()->user();
@@ -250,13 +273,7 @@ class CustomerMikrotikImportController extends Controller
 
     private function scopedRouterQuery()
     {
-        $ids = $this->scopedAreaIds();
-        static $hasArea = null;
-        $hasArea ??= Schema::hasColumn('routers', 'area_id');
-
-        return Router::query()
-            ->where('active', true)
-            ->when($ids !== null && $hasArea, fn ($q) => $q->whereIn('area_id', $ids));
+        return CustomerAccessScope::routers();
     }
 
     private function areaExistsRule()
@@ -270,4 +287,16 @@ class CustomerMikrotikImportController extends Controller
             }
         });
     }
+
+    private function cleanImportedCustomerName(string $username): string
+    {
+        $local = trim(explode('@', trim($username), 2)[0]);
+        $name = preg_replace('/^(?:(?:[0-9]+|olt|[a-z])\.)+/iu', '', $local) ?? $local;
+        $name = trim($name);
+        if ($name === '') {
+            $name = $local;
+        }
+        return mb_strtoupper(mb_substr($name, 0, 1)).mb_substr($name, 1);
+    }
+
 }

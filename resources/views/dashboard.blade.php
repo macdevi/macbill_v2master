@@ -11,6 +11,10 @@
     $dashboardAreas = collect($dashboardAreas ?? []);
     $isAreaDashboard = $dashboardScope === 'area';
 
+    $hasMonitoringRouterContext = isset($monitorRouters);
+    $monitorRouters = collect($monitorRouters ?? []);
+    $selectedMonitorRouter = $selectedMonitorRouter ?? null;
+    $networkUnknown = max((int)($unknownCustomers ?? 0),0);
     $networkTotal = max((int) $totalCustomers, 0);
     $networkOnline = max((int) $onlineCustomers, 0);
     $networkOffline = max((int) $offlineCustomers, 0);
@@ -34,13 +38,16 @@
         $networkHealthClass = 'db2-health--bad';
     }
 
-    $networkDonutStyle = sprintf(
-        'background: conic-gradient(#22c55e 0%% %.4f%%, #f43f5e %.4f%% %.4f%%, #f59e0b %.4f%% 100%%);',
+    $networkIsolatedEnd = min($networkOfflineEnd + $networkIsolatedPercent, 100);
+    $networkDonutStyle = $networkTotal > 0 ? sprintf(
+        'background: conic-gradient(#22c55e 0%% %.4f%%, #f43f5e %.4f%% %.4f%%, #f59e0b %.4f%% %.4f%%, #64748b %.4f%% 100%%);',
         $networkOnlineEnd,
         $networkOnlineEnd,
         $networkOfflineEnd,
-        $networkOfflineEnd
-    );
+        $networkOfflineEnd,
+        $networkIsolatedEnd,
+        $networkIsolatedEnd
+    ) : 'background: #64748b;';
 
     $expenseBarWidth = $monthlyIncome > 0
         ? min(round(($monthlyExpense / $monthlyIncome) * 100, 1), 100)
@@ -73,8 +80,23 @@
                     <p class="db2-network-v2__eyebrow">STATUS JARINGAN</p>
                 </div>
 
-                <span class="db2-network-v2__live"><i></i>LIVE</span>
+                <span class="db2-network-v2__live">SAAT DIBUKA</span>
             </header>
+
+            @if($hasMonitoringRouterContext && auth()->user()?->isSuperAdmin())
+            <form method="GET" action="{{ route(auth()->user()?->isSuperAdmin()?'dashboard':'admin.dashboard') }}" class="db2-monitor-picker">
+                <label for="dashboard-monitor-router">Router monitoring</label>
+                <div>
+                    <select name="router_id" id="dashboard-monitor-router" required @disabled($monitorRouters->isEmpty())>
+                        @forelse($monitorRouters as $monitorRouter)
+                        <option value="{{ $monitorRouter->id }}" @selected((int)($selectedMonitorRouter?->id)===(int)$monitorRouter->id)>{{ $monitorRouter->name }}</option>
+                        @empty <option value="">Belum ada router dalam akses Anda</option> @endforelse
+                    </select>
+                    <button type="submit" @disabled($monitorRouters->isEmpty())>Tampilkan</button>
+                </div>
+                <p>Pelanggan mengikuti router pilihan dan wilayah akses Anda. Keuangan tetap mengikuti wilayah, bukan pilihan router.</p>
+            </form>
+            @endif
 
             <section class="db2-network-v2__router" aria-label="Status MikroTik">
                 <span class="db2-network-v2__router-icon" aria-hidden="true">
@@ -82,7 +104,7 @@
 </span>
 
 <div class="db2-network-v2__router-copy">
-    <strong>MikroTik Gateway</strong>
+    <strong>{{ $hasMonitoringRouterContext ? ($selectedMonitorRouter?->name ?? 'Router belum tersedia') : 'MikroTik Gateway' }}</strong>
     <span>
         {{ ($mikrotikConnected ?? '') === 'Connected'
             ? 'Terhubung ke ' . ($mikrotikIdentity ?: 'MikroTik')
@@ -95,7 +117,7 @@
     <div class="db2-network-v2__metric">
                     <span class="db2-network-v2__metric-label">Status</span>
                     <strong class="db2-network-v2__metric-value {{ ($mikrotikConnected ?? '') === 'Connected' ? 'is-good' : '' }}">
-                        {{ ($mikrotikConnected ?? '') === 'Connected' ? 'Online' : 'Offline' }}
+                        {{ ($mikrotikConnected ?? '') === 'Connected' ? 'Terhubung' : 'Belum diketahui' }}
                     </strong>
                 </div>
 
@@ -153,10 +175,21 @@
                         <strong class="db2-network-v2__status-count">{{ number_format($networkIsolated, 0, ',', '.') }}</strong>
                         <span class="db2-network-v2__status-action">Lihat ›</span>
                     </button>
+                    @if($networkUnknown > 0)
+                    <button type="button" class="db2-network-v2__status db2-network-v2__status--unknown" data-customer-status="unknown" aria-label="Lihat pelanggan yang koneksinya belum diketahui">
+                        <span class="db2-network-v2__status-dot" aria-hidden="true"></span>
+                        <span class="db2-network-v2__status-label">Belum diketahui</span>
+                        <strong class="db2-network-v2__status-count">{{ number_format($networkUnknown,0,',','.') }}</strong>
+                        <span class="db2-network-v2__status-action">Lihat ›</span>
+                    </button>
+                    @endif
                 </div>
             </section>
 
-            <p class="db2-network-v2__updated">Ether1 · [DOWN] <strong>{{ $traffic["download"] ?? "0 bps" }}</strong> · [UP] <strong>{{ $traffic["upload"] ?? "0 bps" }}</strong></p>
+            <p class="db2-network-v2__updated">{{ $traffic['interface'] ?? 'ether1' }} · Download <strong>{{ $traffic['download'] ?? '-' }}</strong> · Upload <strong>{{ $traffic['upload'] ?? '-' }}</strong></p>
+            @if($hasMonitoringRouterContext)
+            <p class="db2-network-v2__updated">Diperiksa: {{ $networkCheckedAt ?? '-' }} ({{ config('app.timezone','UTC') }}). Muat ulang untuk memperbarui.</p>
+            @endif
         </article>
 
         <article class="db2-card db2-profit db2-finance-v5 {{ $netProfit < 0 ? 'db2-profit--negative' : '' }}">
@@ -534,6 +567,7 @@
         online: { title: 'Pelanggan Online', label: 'ONLINE', empty: 'Tidak ada pelanggan online saat ini.' },
         offline: { title: 'Pelanggan Offline', label: 'OFFLINE', empty: 'Tidak ada pelanggan offline saat ini.' },
         isolated: { title: 'Pelanggan Terisolir', label: 'TERISOLIR', empty: 'Tidak ada pelanggan terisolir saat ini.' },
+        unknown: { title: 'Koneksi Belum Diketahui', label: 'BELUM DIKETAHUI', empty: 'Tidak ada pelanggan dengan koneksi belum diketahui.' },
     };
 
     const modal = document.getElementById('customer-status-modal');

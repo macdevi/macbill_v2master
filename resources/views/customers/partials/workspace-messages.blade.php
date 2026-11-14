@@ -1,0 +1,4 @@
+@if(session('success'))<div class="cc-note" data-tone="good" role="status">{{ session('success') }}</div>@endif
+@if(session('error'))<div class="cc-note" data-tone="bad" role="alert">{{ session('error') }}</div>@endif
+@if($errors->any())<div class="cc-note" data-tone="bad" role="alert"><div><p style="font-weight:700">Periksa data berikut:</p><ul style="list-style:disc;padding-left:18px">@foreach($errors->all() as $message)<li>{{ $message }}</li>@endforeach</ul></div></div>@endif
+@if(session('import_errors'))<div class="cc-note" data-tone="warn" role="status"><div><p style="font-weight:700">Baris yang tidak diimpor:</p><ul style="list-style:disc;padding-left:18px;max-height:220px;overflow:auto">@foreach(session('import_errors') as $message)<li>{{ $message }}</li>@endforeach</ul></div></div>@endif

@@ -12,69 +12,75 @@ class PackageController extends Controller
     public function index()
     {
         return view('packages.index', [
-            'packages' => InternetPackage::latest()->paginate(20),
-            'routers' => Router::where('active', true)->get(),
+            'packages' => InternetPackage::with('routers')->latest()->paginate(20),
+            'syncStates' => \Illuminate\Support\Facades\DB::table('package_sync_states')
+                ->get()->keyBy(fn ($state) =>
+                    $state->internet_package_id.':'.$state->router_id
+                ),
+            'routers' => Router::where('active', true)->orderBy('name')->get(),
         ]);
+    }
+
+    private function packageRouterFormData(?InternetPackage $package = null): array
+    {
+        $selectedRouterIds = $package ? $package->routers()->pluck('routers.id')
+            ->map(fn ($id) => (int) $id)->all() : [];
+        $routerUsage = $package ? \Illuminate\Support\Facades\DB::table('customers')
+            ->where('internet_package_id', $package->id)
+            ->select('router_id')->selectRaw('COUNT(*) AS total')
+            ->groupBy('router_id')->pluck('total', 'router_id') : collect();
+        $visibleIds = array_unique(array_merge($selectedRouterIds, $routerUsage->keys()->all()));
+        $routers = Router::query()->where(function ($query) use ($visibleIds) {
+            $query->where('active', true);
+            if ($visibleIds) {
+                $query->orWhereIn('id', $visibleIds);
+            }
+        })->orderBy('name')->get();
+        return compact('package', 'selectedRouterIds', 'routerUsage', 'routers');
     }
 
     public function create()
     {
-        return view('packages.create');
+        return view('packages.create', $this->packageRouterFormData());
     }
-
-    public function store(Request $request)
+    public function store(Request $request, \App\Services\PackageCatalogService $catalog)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'mikrotik_profile' => 'required|string|max:100|unique:internet_packages,mikrotik_profile',
-            'download_speed' => 'required|integer|min:1',
-            'upload_speed' => 'required|integer|min:1',
-            'monthly_price' => 'nullable|numeric|min:0',
-            'burst_limit' => 'nullable|string|max:50',
-            'burst_threshold' => 'nullable|string|max:50',
-            'burst_time' => 'nullable|string|max:50',
-            'priority' => 'nullable|integer|min:1|max:8',
-        ]);
-
-        $data['monthly_price'] = $data['monthly_price'] ?? 0;
-        $data['priority'] = $data['priority'] ?? 8;
-
-        InternetPackage::create($data);
-
-        return redirect()
-            ->route('packages.index')
-            ->with('success', 'Paket dibuat.');
+        abort_unless($request->user()?->isSuperAdmin(), 403);
+        try {
+            $catalog->save($request->all());
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            report($exception);
+            return back()->withInput()->withErrors([
+                'package' => 'Paket tidak tersimpan. Periksa log aplikasi sebelum mencoba ulang.',
+            ]);
+        }
+        return redirect()->route('packages.index')->with('success',
+            'Paket dan pilihan router disimpan. Tidak ada sync ke MikroTik.'
+        );
     }
-
     public function edit(InternetPackage $package)
     {
-        return view('packages.edit', compact('package'));
+        return view('packages.edit', $this->packageRouterFormData($package));
     }
-
-    public function update(Request $request, InternetPackage $package)
+    public function update(Request $request, InternetPackage $package, \App\Services\PackageCatalogService $catalog)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:100',
-            'mikrotik_profile' => 'required|string|max:100|unique:internet_packages,mikrotik_profile,' . $package->id,
-            'download_speed' => 'required|integer|min:1',
-            'upload_speed' => 'required|integer|min:1',
-            'monthly_price' => 'nullable|numeric|min:0',
-            'burst_limit' => 'nullable|string|max:50',
-            'burst_threshold' => 'nullable|string|max:50',
-            'burst_time' => 'nullable|string|max:50',
-            'priority' => 'nullable|integer|min:1|max:8',
-        ]);
-
-        $data['monthly_price'] = $data['monthly_price'] ?? 0;
-        $data['priority'] = $data['priority'] ?? 8;
-
-        $package->update($data);
-
-        return redirect()
-            ->route('packages.index')
-            ->with('success', 'Paket diperbarui.');
+        abort_unless($request->user()?->isSuperAdmin(), 403);
+        try {
+            $catalog->save($request->all(), $package);
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            report($exception);
+            return back()->withInput()->withErrors([
+                'package' => 'Perubahan tidak tersimpan. Periksa log aplikasi sebelum mencoba ulang.',
+            ]);
+        }
+        return redirect()->route('packages.index')->with('success',
+            'Paket dan pilihan router diperbarui. Tidak ada sync ke MikroTik.'
+        );
     }
-
     public function destroy(InternetPackage $package)
     {
         $package->delete();
@@ -84,6 +90,8 @@ class PackageController extends Controller
 
     public function import(Router $router, MikroTikService $mikrotik)
     {
+        abort_unless($router->active, 422, 'Router sumber tidak aktif.');
+
         $profiles = collect($mikrotik->profiles($router))->map(function ($profile) {
             $rate = $profile['rate-limit'] ?? '';
             $download = 0;
@@ -118,77 +126,146 @@ class PackageController extends Controller
         return view('packages.import', [
             'router' => $router,
             'profiles' => $profiles,
+            'routers' => Router::where('active', true)->orderBy('name')->get(),
+            'availablePackages' => InternetPackage::with('routers')
+                ->orderBy('name')->orderBy('id')->get(),
         ]);
     }
 
-    public function importStore(Request $request)
-    {
-        $request->validate([
-            'router_id' => 'required|exists:routers,id',
-            'packages' => 'required|array|min:1',
-            'packages.*.name' => 'required|string|max:100',
-            'packages.*.mikrotik_profile' => 'required|string|max:100',
-            'packages.*.download_speed' => 'nullable|integer|min:0',
-            'packages.*.upload_speed' => 'nullable|integer|min:0',
-            'packages.*.monthly_price' => 'nullable|numeric|min:0',
-            'packages.*.burst_limit' => 'nullable|string|max:50',
-            'packages.*.burst_threshold' => 'nullable|string|max:50',
-            'packages.*.burst_time' => 'nullable|string|max:50',
-            'packages.*.priority' => 'nullable|integer|min:1|max:8',
+    public function importStore(
+        Request $request,
+        \App\Services\PackageImportService $importer
+    ) {
+        $data = $request->validate([
+            'router_id' => [
+                'required',
+                'integer',
+                \Illuminate\Validation\Rule::exists('routers', 'id')
+                    ->where('active', true),
+            ],
+            'packages' => ['required', 'array', 'min:1'],
         ]);
 
-        foreach ($request->packages as $item) {
-            InternetPackage::updateOrCreate(
-                ['mikrotik_profile' => $item['mikrotik_profile']],
-                [
-                    'name' => $item['name'],
-                    'download_speed' => $item['download_speed'] ?? 0,
-                    'upload_speed' => $item['upload_speed'] ?? 0,
-                    'monthly_price' => $item['monthly_price'] ?? 0,
-                    'burst_limit' => $item['burst_limit'] ?? null,
-                    'burst_threshold' => $item['burst_threshold'] ?? null,
-                    'burst_time' => $item['burst_time'] ?? null,
-                    'priority' => $item['priority'] ?? 8,
-                    'active' => true,
-                ]
-            );
-        }
+        $router = Router::findOrFail($data['router_id']);
+        $result = $importer->importPackages($router, $data['packages']);
 
-        return redirect()
-            ->route('packages.index')
-            ->with('success', 'Import paket berhasil.');
+        return redirect()->route('packages.index')->with(
+            'success',
+            'Import dari '.$router->name.': '
+            .$result['created'].' paket baru, '
+            .$result['linked'].' paket dihubungkan, '
+            .$result['unchanged'].' paket lama dipertahankan. '
+            .'Tidak ada perubahan yang dikirim ke MikroTik.'
+        );
     }
 
-    public function sync(InternetPackage $package, MikroTikService $mikrotik)
-    {
-        $routers = Router::where('active', true)->get();
-        $success = 0;
-        $failed = [];
+    public function sync(
+        Request $request,
+        InternetPackage $package,
+        MikroTikService $mikrotik
+    ) {
+        $data = $request->validate([
+            'router_id' => ['required', 'integer'],
+        ]);
 
-        foreach ($routers as $router) {
-            try {
-                $mikrotik->syncProfile($router, [
-                    'name' => $package->mikrotik_profile,
-                    'download_speed' => $package->download_speed,
-                    'upload_speed' => $package->upload_speed,
-                    'burst_limit' => $package->burst_limit,
-                    'burst_threshold' => $package->burst_threshold,
-                    'burst_time' => $package->burst_time,
-                    'priority' => $package->priority,
-                ]);
+        $router = $package->routers()
+            ->where('routers.id', $data['router_id'])
+            ->where('routers.active', true)
+            ->first();
 
-                $success++;
-            } catch (\Throwable $e) {
-                $failed[] = $router->name . ': ' . $e->getMessage();
-            }
-        }
-
-        if (count($failed) > 0) {
+        if (!$router || !$package->active || blank($package->mikrotik_profile)) {
             return back()->withErrors([
-                'sync' => 'Sebagian router gagal disinkronkan. ' . implode(' | ', $failed),
+                'sync' => 'Router tidak terhubung ke paket, tidak aktif, '
+                    .'atau profil paket belum valid.',
             ]);
         }
 
-        return back()->with('success', "Paket berhasil disinkronkan ke {$success} router.");
+        $fingerprint = self::syncFingerprint($package);
+
+        try {
+            $this->recordSyncState($package, $router, 'pending');
+        } catch (\Throwable $exception) {
+            report($exception);
+            return back()->withErrors([
+                'sync' => 'Pencatatan status gagal. Tidak ada sync yang dikirim.',
+            ]);
+        }
+
+        try {
+            $response = $mikrotik->syncProfile($router, $package);
+            MikroTikService::assertSuccessfulResponse($response);
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            try {
+                $this->recordSyncState($package, $router, 'failed');
+            } catch (\Throwable $loggingException) {
+                report($loggingException);
+            }
+
+            return back()->withErrors([
+                'sync' => 'Sync ke '.$router->name
+                    .' gagal. Periksa log sebelum mencoba ulang.',
+            ]);
+        }
+
+        try {
+            $this->recordSyncState($package, $router, 'success', $fingerprint);
+        } catch (\Throwable $exception) {
+            report($exception);
+            return back()->withErrors([
+                'sync' => 'Router merespons tanpa error, tetapi status gagal disimpan. '
+                    .'Periksa router sebelum mengulangi sync.',
+            ]);
+        }
+
+        return back()->with(
+            'success',
+            'Paket '.$package->name.' berhasil disinkronkan ke '.$router->name.'.'
+        );
     }
+
+    public static function syncFingerprint(InternetPackage $package): string
+    {
+        $fields = [
+            'mikrotik_profile', 'download_speed', 'upload_speed',
+            'burst_limit', 'burst_threshold', 'burst_time', 'priority',
+        ];
+
+        $data = [];
+        foreach ($fields as $field) {
+            $data[$field] = (string) ($package->getAttribute($field) ?? '');
+        }
+
+        return hash('sha256', json_encode($data, JSON_THROW_ON_ERROR));
+    }
+
+    private function recordSyncState(
+        InternetPackage $package,
+        Router $router,
+        string $status,
+        ?string $fingerprint = null
+    ): void {
+        $values = [
+            'status' => $status,
+            'attempted_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        if ($status === 'success') {
+            $values['synced_at'] = now();
+            $values['fingerprint'] = $fingerprint;
+        }
+
+        \Illuminate\Support\Facades\DB::table('package_sync_states')
+            ->updateOrInsert(
+                [
+                    'internet_package_id' => $package->id,
+                    'router_id' => $router->id,
+                ],
+                $values
+            );
+    }
+
+
 }

@@ -31,14 +31,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/api/dashboard/pppoe', [DashboardController::class, 'pppoe'])->name('dashboard.pppoe');
 
-        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
-        Route::get('/customers/import/mikrotik', [CustomerMikrotikImportController::class, 'create'])->name('customers.import.mikrotik');
-        Route::post('/customers/import/mikrotik/preview', [CustomerMikrotikImportController::class, 'preview'])->name('customers.import.mikrotik.preview');
-        Route::post('/customers/import/mikrotik/store', [CustomerMikrotikImportController::class, 'store'])->name('customers.import.mikrotik.store');
-        Route::get('/customers/export/excel', [CustomerExcelController::class, 'export'])->name('customers.export.excel');
-        Route::get('/customers/import/excel', [CustomerExcelController::class, 'importForm'])->name('customers.import.excel');
-        Route::post('/customers/import/excel', [CustomerExcelController::class, 'importStore'])->name('customers.import.excel.store');
-        Route::get('/customers/template/excel', [CustomerExcelController::class, 'template'])->name('customers.template.excel');
 
         Route::resource('packages', PackageController::class)->except(['index', 'show']);
         Route::get('/packages/import/{router}', [PackageController::class, 'import'])->name('packages.import');
@@ -50,6 +42,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/billing', [BillingSettingController::class, 'edit'])->name('settings.billing.edit');
         Route::put('/settings/billing', [BillingSettingController::class, 'update'])->name('settings.billing.update');
 
+        Route::get('/routers/{router}/delete-preview', [RouterController::class, 'deletePreview'])->name('routers.delete-preview');
+        Route::post('/routers/{router}/connection-status', [RouterController::class, 'connectionStatus'])->middleware('throttle:20,1')->name('routers.connection-status');
         Route::resource('routers', RouterController::class)->except(['show']);
         Route::post('/routers/{router}/test', [RouterController::class, 'test'])->name('routers.test');
 
@@ -72,6 +66,16 @@ Route::middleware('auth')->group(function () {
 
     // ---------- SUPER ADMIN + ADMIN ----------
     Route::middleware('role:super_admin,admin')->group(function () {
+        // customer-workspace: impor, ekspor, template, hapus; area scope tetap di backend.
+        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+        Route::get('/customers/import/mikrotik', [CustomerMikrotikImportController::class, 'create'])->name('customers.import.mikrotik');
+        Route::post('/customers/import/mikrotik/preview', [CustomerMikrotikImportController::class, 'preview'])->name('customers.import.mikrotik.preview');
+        Route::post('/customers/import/mikrotik/store', [CustomerMikrotikImportController::class, 'store'])->name('customers.import.mikrotik.store');
+        Route::get('/customers/export/excel', [CustomerExcelController::class, 'export'])->name('customers.export.excel');
+        Route::get('/customers/import/excel', [CustomerExcelController::class, 'importForm'])->name('customers.import.excel');
+        Route::post('/customers/import/excel', [CustomerExcelController::class, 'importStore'])->name('customers.import.excel.store');
+        Route::get('/customers/template/excel', [CustomerExcelController::class, 'template'])->name('customers.template.excel');
+
         Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/riwayat-keuangan', [DashboardController::class, 'financeActivity'])->name('finance.activity');
 

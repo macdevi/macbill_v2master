@@ -40,4 +40,21 @@ class Router extends Model
     {
         return $this->hasMany(Customer::class);
     }
+
+    public function internetPackages(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            InternetPackage::class,
+            'internet_package_router',
+            'router_id',
+            'internet_package_id'
+        )->withTimestamps();
+    }
+
+
+    public function accessibleAreas(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Area::class,'area_router_access','router_id','area_id')->withTimestamps();
+    }
+
 }

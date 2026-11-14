@@ -103,8 +103,14 @@ class InstallationController extends Controller
                 Rule::exists('areas', 'id')->whereIn('id', $areaIds)],
             'router_id' => ['required', 'integer',
                 Rule::exists('routers', 'id')->where('active', true)],
-            'internet_package_id' => ['required', 'integer',
-                Rule::exists('internet_packages', 'id')->where('active', true)],
+            'internet_package_id' => [
+                'bail',
+                'required',
+                'integer',
+                new \App\Rules\PackageAvailableOnRouter(
+                    $request->input('router_id')
+                ),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:30',
                 'regex:/^\+?[0-9][0-9\s().-]{6,29}$/'],

@@ -21,58 +21,53 @@ class CustomerController extends Controller
 {
     public function index(MikroTikService $mikrotik)
     {
-        $user = auth()->user();
-
-        $query = Customer::with(['area', 'internetPackage', 'router'])
-            ->latest();
-
-        // Super Admin: seluruh area.
-        // Admin: hanya customer pada area assignment aktif.
-        if (!$user || !$user->isSuperAdmin()) {
-            $query->whereIn('area_id', $user?->activeAreaIds() ?? []);
-        }
-
-        $customers = $query->get();
-
+        $customers = \App\Services\CustomerAccessScope::customers(
+            Customer::with(['area', 'internetPackage', 'router'])->latest()
+        )->get();
         $onlineByRouter = [];
-
+        $checkedByRouter = [];
         foreach ($customers->pluck('router')->filter()->unique('id') as $router) {
+            $checkedByRouter[$router->id] = false;
+            if (!$router->active) {
+                continue;
+            }
             try {
                 $onlineByRouter[$router->id] = collect($mikrotik->onlineUsers($router))
                     ->keyBy('name')
-                    ->map(fn ($onlineUser) => [
-                        'uptime' => $onlineUser['uptime'] ?? null,
-                        'address' => $onlineUser['address'] ?? null,
-                    ])
-                    ->all();
+                    ->map(fn ($session) => [
+                        'uptime' => $session['uptime'] ?? null,
+                        'address' => $session['address'] ?? null,
+                    ])->all();
+                $checkedByRouter[$router->id] = true;
             } catch (\Throwable $e) {
-                $onlineByRouter[$router->id] = [];
+                logger()->warning('Pemeriksaan koneksi pelanggan belum berhasil.', [
+                    'router_id' => $router->id,
+                    'exception_class' => get_class($e),
+                ]);
             }
         }
-
-        $customers->transform(function ($customer) use ($onlineByRouter) {
-            $session = $onlineByRouter[$customer->router_id][$customer->pppoe_username] ?? null;
-
+        $customers->transform(function ($customer) use ($onlineByRouter, $checkedByRouter) {
+            $known = $checkedByRouter[$customer->router_id] ?? false;
+            $session = $known
+                ? ($onlineByRouter[$customer->router_id][$customer->pppoe_username] ?? null)
+                : null;
+            $customer->setAttribute('realtime_connection_state', !$known ? 'unknown' : ($session !== null ? 'online' : 'offline'));
             $customer->setAttribute('realtime_online', $session !== null);
             $customer->setAttribute('realtime_uptime', $session['uptime'] ?? null);
             $customer->setAttribute('realtime_address', $session['address'] ?? null);
-
             return $customer;
         });
-
-        return view('customers.index', compact('customers'));
+        $routers = $customers->pluck('router')->filter()->unique('id')->sortBy('name')->values();
+        return view('customers.index', compact('customers', 'routers'));
     }
 
     public function create()
     {
         return view('customers.create', [
             'areas' => $this->availableAreas(),
-            'packages' => InternetPackage::where('active', true)
-                ->orderBy('monthly_price')
-                ->get(),
-            'routers' => Router::where('active', true)
-                ->orderBy('name')
-                ->get(),
+            'packages' => InternetPackage::with('routers')->where('active', true)
+                ->orderBy('monthly_price')->get(),
+            'routers' => \App\Services\CustomerAccessScope::routers()->orderBy('name')->get(),
         ]);
     }
 
@@ -80,8 +75,15 @@ class CustomerController extends Controller
     {
         $data = $request->validate([
             'area_id' => $this->areaRule(),
-            'router_id' => ['required', 'exists:routers,id'],
-            'internet_package_id' => ['required', 'exists:internet_packages,id'],
+            'router_id' => ['bail', 'required', 'integer', $this->customerRouterRule()],
+            'internet_package_id' => [
+                'bail',
+                'required',
+                'integer',
+                new \App\Rules\PackageAvailableOnRouter(
+                    $request->input('router_id')
+                ),
+            ],
             'monthly_price_override' => ['nullable', 'numeric', 'min:0'],
             'tax_mode' => ['required', 'in:none,inclusive,exclusive'],
             'name' => ['required', 'string', 'max:255'],
@@ -95,6 +97,9 @@ class CustomerController extends Controller
             'area_id.exists' => 'Wilayah yang dipilih tidak tersedia atau bukan wilayah penugasan Anda.',
         ]);
 
+        if (!\App\Services\CustomerAccessScope::routerSupportsArea((int)$data['router_id'],(int)$data['area_id'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['router_id'=>'Router tidak terhubung ke wilayah pelanggan atau tidak tersedia dalam akses Anda.']);
+        }
         $data['customer_code'] = 'CUST-'.strtoupper(Str::random(8));
 
         $customer = DB::transaction(fn () => Customer::create($data));
@@ -124,8 +129,13 @@ class CustomerController extends Controller
         return view('customers.edit', [
             'customer' => $customer,
             'areas' => $this->availableAreas($customer->area_id),
-            'packages' => InternetPackage::where('active', true)->get(),
-            'routers' => Router::where('active', true)->get(),
+            'canSyncRouter' => \App\Services\CustomerAccessScope::routers()->whereKey($customer->router_id)->exists(),
+            'packages' => InternetPackage::with('routers')
+                ->where(fn ($q) => $q->where('active', true)->orWhere('id', $customer->internet_package_id))
+                ->orderBy('monthly_price')->get(),
+            'routers' => Router::query()->where(fn ($q) => $q
+                ->whereIn('id', \App\Services\CustomerAccessScope::routers()->select('routers.id'))
+                ->orWhere('id', $customer->router_id))->orderBy('name')->get(),
         ]);
     }
 
@@ -135,8 +145,21 @@ class CustomerController extends Controller
 
         $data = $request->validate([
             'area_id' => $this->areaRule(),
-            'router_id' => ['required', 'exists:routers,id'],
-            'internet_package_id' => ['required', 'exists:internet_packages,id'],
+            'router_id' => ['bail', 'required', 'integer', $this->customerRouterRule($customer, $request->input('save_target') === 'billing')],
+            'internet_package_id' => [
+                'bail',
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) use ($request, $customer) {
+                    $sameRouter = (string) $request->input('router_id') === (string) $customer->router_id;
+                    $samePackage = (string) $value === (string) $customer->internet_package_id;
+                    if ($request->input('save_target') === 'billing' && $sameRouter && $samePackage) {
+                        return;
+                    }
+                    (new \App\Rules\PackageAvailableOnRouter($request->input('router_id')))
+                        ->validate($attribute, $value, $fail);
+                },
+            ],
             'monthly_price_override' => ['nullable', 'numeric', 'min:0'],
             'tax_mode' => ['required', 'in:none,inclusive,exclusive'],
             'name' => ['required', 'string', 'max:255'],
@@ -157,6 +180,19 @@ class CustomerController extends Controller
             'save_target.required' => 'Pilihan penyimpanan wajib dipilih.',
             'save_target.in' => 'Pilihan penyimpanan tidak valid.',
         ]);
+
+        $preserveOldPair = $data['save_target'] === 'billing'
+            && (int)$data['router_id'] === (int)$customer->router_id
+            && (int)$data['area_id'] === (int)$customer->area_id;
+        if (!$preserveOldPair && !\App\Services\CustomerAccessScope::routerSupportsArea((int)$data['router_id'],(int)$data['area_id'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['router_id'=>'Router tidak terhubung ke wilayah pelanggan atau tidak tersedia dalam akses Anda.']);
+        }
+        if ((int) $data['router_id'] !== (int) $customer->router_id) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'router_id' => 'Pergantian router tidak tersedia melalui edit biasa. '
+                    .'Pemindahan akun antar-MikroTik harus ditangani terpisah.',
+            ]);
+        }
 
         $syncToMikrotik = $data['save_target'] === 'billing_mikrotik';
         unset($data['save_target']);
@@ -375,6 +411,18 @@ class CustomerController extends Controller
                 'Aktivasi belum selesai. Periksa status billing dan router: '.$e->getMessage()
             );
         }
+    }
+
+    private function customerRouterRule(?Customer $customer = null, bool $preserve = false)
+    {
+        return Rule::exists('routers', 'id')->where(function ($query) use ($customer, $preserve) {
+            $query->where(function ($allowed) use ($customer, $preserve) {
+                $allowed->whereIn('id', \App\Services\CustomerAccessScope::routers()->select('routers.id'));
+                if ($customer && $preserve) {
+                    $allowed->orWhere('id', $customer->router_id);
+                }
+            });
+        });
     }
 
     private function authorizeCustomerArea(Customer $customer): void
