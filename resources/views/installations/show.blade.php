@@ -85,6 +85,9 @@
         <p class="whitespace-pre-line text-sm">{{ $installation->notes }}</p>
     @endif
 
+    {{-- psb-billing-correction-v1 --}}
+    @include('installations.partials.billing-correction')
+
     <div class="installation-actions space-y-3">
         <p class="text-sm">Status sinkronisasi MikroTik: {{ $syncStatus }}</p>
         <div class="flex flex-wrap gap-2">

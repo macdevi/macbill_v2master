@@ -131,3 +131,16 @@ Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
         [\App\Http\Controllers\InstallationCancellationController::class, 'destroy']
     )->name('installations.cancel');
 });
+
+// psb-billing-correction-v1: koreksi jadwal awal, bukan perubahan siklus pelanggan lama.
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::get('/pasang-baru/{installation}/koreksi-tagihan',
+        [\App\Http\Controllers\InstallationBillingCorrectionController::class, 'edit'])
+        ->name('installations.billing-correction.edit');
+    Route::post('/pasang-baru/{installation}/koreksi-tagihan/preview',
+        [\App\Http\Controllers\InstallationBillingCorrectionController::class, 'preview'])
+        ->name('installations.billing-correction.preview');
+    Route::put('/pasang-baru/{installation}/koreksi-tagihan',
+        [\App\Http\Controllers\InstallationBillingCorrectionController::class, 'update'])
+        ->name('installations.billing-correction.update');
+});
