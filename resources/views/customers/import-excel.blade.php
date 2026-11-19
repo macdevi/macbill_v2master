@@ -3,6 +3,7 @@
 @section('title', 'Import Pelanggan Excel')
 
 @section('content')
+@include('customers.excel-update-preview')
 <div class="mx-auto max-w-3xl space-y-6">
     <div class="flex items-center gap-3">
         <a href="{{ route('customers.index') }}"
@@ -12,7 +13,7 @@
 
         <div>
             <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                Import Pelanggan dari Excel
+                Import / Update Pelanggan dari Excel
             </h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Data disimpan ke billing saja. Tidak ada akun PPPoE yang dikirim ke MikroTik saat import.
@@ -39,7 +40,7 @@
     @endif
 
     @if(session('import_errors'))
-        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+        <div class="rounded-2xl border border-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
             <p class="font-bold">Baris yang tidak diimpor:</p>
             <ul class="mt-2 max-h-56 list-disc space-y-1 overflow-y-auto pl-5">
                 @foreach(session('import_errors') as $error)
@@ -77,7 +78,7 @@
                 </span>
 
                 <select name="area_id"
-                        required
+                        
                         class="mt-2 block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
                     <option value="">Pilih wilayah tujuan import</option>
                     @foreach($areas as $area)
@@ -117,7 +118,7 @@
 
                 <button type="submit"
                         class="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-5 py-3 text-sm font-black text-slate-950 shadow-sm shadow-cyan-500/20 transition hover:bg-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-300/40">
-                    ↑ Import ke Billing
+                    Proses File Excel
                 </button>
             </div>
         </form>

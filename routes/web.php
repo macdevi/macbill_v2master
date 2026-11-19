@@ -144,3 +144,18 @@ Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
         [\App\Http\Controllers\InstallationBillingCorrectionController::class, 'update'])
         ->name('installations.billing-correction.update');
 });
+
+// due-day-excel-v1
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::get('/customer-due-day-excel', [
+        \App\Http\Controllers\CustomerDueDayExcelController::class, 'index',
+    ])->name('customers.due-day-excel');
+
+    Route::post('/customer-due-day-excel/preview', [
+        \App\Http\Controllers\CustomerDueDayExcelController::class, 'preview',
+    ])->name('customers.due-day-excel.preview');
+
+    Route::post('/customer-due-day-excel/store', [
+        \App\Http\Controllers\CustomerDueDayExcelController::class, 'store',
+    ])->name('customers.due-day-excel.store');
+});
