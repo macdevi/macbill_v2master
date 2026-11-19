@@ -40,7 +40,7 @@
     @endif
 
     @if(session('import_errors'))
-        <div class="rounded-2xl border border-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
             <p class="font-bold">Baris yang tidak diimpor:</p>
             <ul class="mt-2 max-h-56 list-disc space-y-1 overflow-y-auto pl-5">
                 @foreach(session('import_errors') as $error)
