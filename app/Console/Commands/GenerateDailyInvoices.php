@@ -103,6 +103,13 @@ class GenerateDailyInvoices extends Command
                                 return null;
                             }
 
+                            if ((float) $tax['gross_amount'] <= 0) {
+
+                                return null;
+
+                            }
+
+
                             $availableCredit = round((float) $customer->credit_balance, 2);
                             $grossAmount = round((float) $tax['gross_amount'], 2);
                             $creditUsed = round(min($availableCredit, $grossAmount), 2);

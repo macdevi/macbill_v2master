@@ -241,6 +241,12 @@ class InvoiceController extends Controller
                 ->where('status', '!=', 'inactive')
                 ->get() as $customer
         ) {
+            if ((float) $customer->effective_monthly_price <= 0
+                && $customer->service_activated_on === null) {
+                $skippedCount++;
+                continue;
+            }
+
             if ($customer->service_activated_on !== null) {
                 $plan = $billingTax->calculateForBillingPeriod(
                     $customer, $billingMonth->toDateString()
@@ -372,13 +378,23 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            if (($customer->service_activated_on !== null ||
-                 $customer->billing_resumed_on !== null) &&
+            if ($customer->service_activated_on !== null &&
                 Carbon::parse($tax['billing_date'])->startOfDay()->greaterThan(Carbon::today())) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'invoice' => 'Tanggal penerbitan tagihan pertama belum tiba.',
                 ]);
             }
+
+            if ((float) $tax['gross_amount'] <= 0) {
+
+                throw \Illuminate\Validation\ValidationException::withMessages([
+
+                    'invoice' => 'Pelanggan bernominal Rp0 (gratis) tidak ditagih.',
+
+                ]);
+
+            }
+
 
             if (isset($tax['billing_date'])) {
                 $billingDate = Carbon::parse($tax['billing_date']);
