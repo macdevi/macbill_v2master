@@ -29,16 +29,7 @@ Route::middleware('auth')->group(function () {
     // ---------- SUPER ADMIN saja ----------
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/api/dashboard/pppoe', [DashboardController::class, 'pppoe'])->name('dashboard.pppoe');
 
-        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
-        Route::get('/customers/import/mikrotik', [CustomerMikrotikImportController::class, 'create'])->name('customers.import.mikrotik');
-        Route::post('/customers/import/mikrotik/preview', [CustomerMikrotikImportController::class, 'preview'])->name('customers.import.mikrotik.preview');
-        Route::post('/customers/import/mikrotik/store', [CustomerMikrotikImportController::class, 'store'])->name('customers.import.mikrotik.store');
-        Route::get('/customers/export/excel', [CustomerExcelController::class, 'export'])->name('customers.export.excel');
-        Route::get('/customers/import/excel', [CustomerExcelController::class, 'importForm'])->name('customers.import.excel');
-        Route::post('/customers/import/excel', [CustomerExcelController::class, 'importStore'])->name('customers.import.excel.store');
-        Route::get('/customers/template/excel', [CustomerExcelController::class, 'template'])->name('customers.template.excel');
 
         Route::resource('packages', PackageController::class)->except(['index', 'show']);
         Route::get('/packages/import/{router}', [PackageController::class, 'import'])->name('packages.import');
@@ -50,6 +41,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/billing', [BillingSettingController::class, 'edit'])->name('settings.billing.edit');
         Route::put('/settings/billing', [BillingSettingController::class, 'update'])->name('settings.billing.update');
 
+        Route::get('/routers/{router}/delete-preview', [RouterController::class, 'deletePreview'])->name('routers.delete-preview');
+        Route::post('/routers/{router}/connection-status', [RouterController::class, 'connectionStatus'])->middleware('throttle:20,1')->name('routers.connection-status');
         Route::resource('routers', RouterController::class)->except(['show']);
         Route::post('/routers/{router}/test', [RouterController::class, 'test'])->name('routers.test');
 
@@ -72,6 +65,16 @@ Route::middleware('auth')->group(function () {
 
     // ---------- SUPER ADMIN + ADMIN ----------
     Route::middleware('role:super_admin,admin')->group(function () {
+        // customer-workspace: impor, ekspor, template, hapus; area scope tetap di backend.
+        Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+        Route::get('/customers/import/mikrotik', [CustomerMikrotikImportController::class, 'create'])->name('customers.import.mikrotik');
+        Route::post('/customers/import/mikrotik/preview', [CustomerMikrotikImportController::class, 'preview'])->name('customers.import.mikrotik.preview');
+        Route::post('/customers/import/mikrotik/store', [CustomerMikrotikImportController::class, 'store'])->name('customers.import.mikrotik.store');
+        Route::get('/customers/export/excel', [CustomerExcelController::class, 'export'])->name('customers.export.excel');
+        Route::get('/customers/import/excel', [CustomerExcelController::class, 'importForm'])->name('customers.import.excel');
+        Route::post('/customers/import/excel', [CustomerExcelController::class, 'importStore'])->name('customers.import.excel.store');
+        Route::get('/customers/template/excel', [CustomerExcelController::class, 'template'])->name('customers.template.excel');
+
         Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/riwayat-keuangan', [DashboardController::class, 'financeActivity'])->name('finance.activity');
 
@@ -108,4 +111,51 @@ Route::middleware('auth')->group(function () {
         Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
         Route::post('/invoices/{invoice}/payments', [PaymentController::class, 'store'])->name('payments.store');
     });
+});
+
+
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::get('/pasang-baru', [\App\Http\Controllers\InstallationController::class, 'index'])
+        ->name('installations.index');
+    Route::get('/pasang-baru/create', [\App\Http\Controllers\InstallationController::class, 'create'])
+        ->name('installations.create');
+    Route::post('/pasang-baru', [\App\Http\Controllers\InstallationController::class, 'store'])
+        ->name('installations.store');
+    Route::get('/pasang-baru/{installation}', [\App\Http\Controllers\InstallationController::class, 'show'])
+        ->name('installations.show');
+});
+
+
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::delete('/pasang-baru/{installation}/cancel',
+        [\App\Http\Controllers\InstallationCancellationController::class, 'destroy']
+    )->name('installations.cancel');
+});
+
+// psb-billing-correction-v1: koreksi jadwal awal, bukan perubahan siklus pelanggan lama.
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::get('/pasang-baru/{installation}/koreksi-tagihan',
+        [\App\Http\Controllers\InstallationBillingCorrectionController::class, 'edit'])
+        ->name('installations.billing-correction.edit');
+    Route::post('/pasang-baru/{installation}/koreksi-tagihan/preview',
+        [\App\Http\Controllers\InstallationBillingCorrectionController::class, 'preview'])
+        ->name('installations.billing-correction.preview');
+    Route::put('/pasang-baru/{installation}/koreksi-tagihan',
+        [\App\Http\Controllers\InstallationBillingCorrectionController::class, 'update'])
+        ->name('installations.billing-correction.update');
+});
+
+// due-day-excel-v1
+Route::middleware(['auth', 'role:super_admin,admin'])->group(function () {
+    Route::get('/customer-due-day-excel', [
+        \App\Http\Controllers\CustomerDueDayExcelController::class, 'index',
+    ])->name('customers.due-day-excel');
+
+    Route::post('/customer-due-day-excel/preview', [
+        \App\Http\Controllers\CustomerDueDayExcelController::class, 'preview',
+    ])->name('customers.due-day-excel.preview');
+
+    Route::post('/customer-due-day-excel/store', [
+        \App\Http\Controllers\CustomerDueDayExcelController::class, 'store',
+    ])->name('customers.due-day-excel.store');
 });

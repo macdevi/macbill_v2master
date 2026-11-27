@@ -1,5 +1,6 @@
-<div class="grid gap-4 md:grid-cols-2">
-    <label class="block">
+@php $isEdit = isset($customer) && $customer->exists; @endphp
+<div class="cc-editor" data-cc-editor data-edit="{{ $isEdit ? '1' : '0' }}">
+<section class="cc-section"><h2>@include('customers.partials.workspace-icon',['name'=>'users']) 1. Identitas pelanggan</h2><p>Wilayah menentukan pembatasan akses petugas terhadap pelanggan ini.</p><div class="cc-field-grid">    <label class="block">
         <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
             Nama Pelanggan
         </span>
@@ -11,9 +12,7 @@
         @error('name')
             <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
         @enderror
-    </label>
-
-    <label class="block">
+    </label>    <label class="block">
         <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
             No. Telepon
         </span>
@@ -24,56 +23,7 @@
         @error('phone')
             <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
         @enderror
-    </label>
-
-    <label class="block">
-        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Username PPPoE
-        </span>
-        <input name="pppoe_username"
-               type="text"
-               value="{{ old('pppoe_username', $customer->pppoe_username ?? '') }}"
-               class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-               required>
-        @error('pppoe_username')
-            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
-        @enderror
-    </label>
-
-    <label class="block">
-        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Password PPPoE
-            @if (isset($customer))
-                <span class="font-normal text-slate-400">(kosongkan bila tidak diubah)</span>
-            @endif
-        </span>
-        <input name="pppoe_password"
-               type="password"
-               value=""
-               class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-               {{ isset($customer) ? '' : 'required' }}>
-        @error('pppoe_password')
-            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
-        @enderror
-    </label>
-
-    <label class="block">
-        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Tanggal Jatuh Tempo
-        </span>
-        <input name="due_day"
-               type="number"
-               min="1"
-               max="28"
-               value="{{ old('due_day', $customer->due_day ?? '') }}"
-               class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-               required>
-        @error('due_day')
-            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
-        @enderror
-    </label>
-
-    <label class="block">
+    </label>    <label class="block">
         <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
             Wilayah Operasional
         </span>
@@ -91,47 +41,86 @@
         @error('area_id')
             <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
         @enderror
-    </label>
-
-    <label class="block">
+    </label></div><div style="margin-top:17px"><label class="block">
+    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+        Alamat
+    </span>
+    <textarea name="address"
+              rows="3"
+              class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20">{{ old('address', $customer->address ?? '') }}</textarea>
+    @error('address')
+        <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
+    @enderror
+</label></div></section>
+<section class="cc-section"><h2>@include('customers.partials.workspace-icon',['name'=>'router']) 2. Router dan paket</h2><p>Pilih paket yang memang terhubung ke router pelanggan.</p><div class="cc-field-grid"><label class="block">
+<span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Router pelanggan</span>
+@if($isEdit)
+<input type="hidden" name="router_id" value="{{ $customer->router_id }}">
+<select data-cc-router data-active="{{ ($canSyncRouter ?? false) && $customer->router?->active ? '1' : '0' }}" disabled class="mt-1 w-full rounded-xl border px-4 py-3">
+<option value="{{ $customer->router_id }}" selected>{{ $customer->router?->name ?: 'Router tidak tersedia' }}{{ $customer->router?->active ? '' : ' (nonaktif/tidak tersedia)' }}</option>
+</select>
+<p class="cc-row-note" style="margin-top:6px">Tetap. Pemindahan router tidak dilakukan melalui form ini.</p>
+@else
+<select name="router_id" data-cc-router required class="mt-1 w-full rounded-xl border px-4 py-3">
+<option value="">Pilih router terlebih dahulu</option>
+@foreach($routers as $router)<option value="{{ $router->id }}" data-cc-areas="{{ $router->accessibleAreas->filter(fn($area)=>$area->active)->pluck('id')->implode(',') }}" @selected((string) old('router_id','') === (string) $router->id)>{{ $router->name }}</option>@endforeach
+</select>
+@endif
+@error('router_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+</label><label class="block">
+<span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Paket internet</span>
+<select name="internet_package_id" data-cc-package required class="mt-1 w-full rounded-xl border px-4 py-3">
+<option value="">Pilih paket internet</option>
+@foreach($packages as $package)
+<option value="{{ $package->id }}" data-active="{{ $package->active ? '1' : '0' }}" data-routers="{{ $package->routers->filter(fn($router) => $router->active)->pluck('id')->implode(',') }}" data-original="{{ $isEdit && (int) $customer->internet_package_id === (int) $package->id ? '1' : '0' }}" @selected((string) old('internet_package_id',$customer->internet_package_id ?? '') === (string) $package->id)>{{ $package->name }} | Rp {{ number_format((float) $package->monthly_price,0,',','.') }}{{ $package->active ? '' : ' (nonaktif)' }}</option>
+@endforeach
+</select>
+<p class="cc-row-note" style="margin-top:6px" data-cc-package-note>Pilih router terlebih dahulu.</p>
+@error('internet_package_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+</label></div></section>
+<section class="cc-section"><h2>@include('customers.partials.workspace-icon',['name'=>'account']) 3. Akun PPPoE</h2><p>Data akun koneksi. Menyimpan billing saja tidak mengubah akun pada perangkat.</p><div class="cc-field-grid">    <label class="block">
         <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Router
+            Username PPPoE
         </span>
-        <select name="router_id"
-                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-                required>
-            @foreach ($routers as $router)
-                <option value="{{ $router->id }}"
-                    @selected(old('router_id', $customer->router_id ?? '') == $router->id)>
-                    {{ $router->name }} — {{ $router->host }}
-                </option>
-            @endforeach
-        </select>
-        @error('router_id')
+        <input name="pppoe_username"
+               type="text"
+               value="{{ old('pppoe_username', $customer->pppoe_username ?? '') }}"
+               class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
+               required>
+        @error('pppoe_username')
             <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
         @enderror
-    </label>
-
-    <label class="block">
+    </label>    <label class="block">
         <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-            Paket Internet
+            Password PPPoE
+            @if (isset($customer))
+                <span class="font-normal text-slate-400">(kosongkan bila tidak diubah)</span>
+            @endif
         </span>
-        <select name="internet_package_id"
-                class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
-                required>
-            @foreach ($packages as $package)
-                <option value="{{ $package->id }}"
-                    @selected(old('internet_package_id', $customer->internet_package_id ?? '') == $package->id)>
-                    {{ $package->name }} — Rp {{ number_format((float) $package->monthly_price, 0, ',', '.') }}
-                </option>
-            @endforeach
-        </select>
-        @error('internet_package_id')
+        <input name="pppoe_password"
+               type="password" autocomplete="new-password"
+               value=""
+               class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
+               {{ isset($customer) ? '' : 'required' }}>
+        @error('pppoe_password')
             <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
         @enderror
-    </label>
-
-    <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+    </label></div></section>
+<section class="cc-section"><h2>@include('customers.partials.workspace-icon',['name'=>'billing']) 4. Pengaturan billing</h2><p>Harga khusus kosong mengikuti harga paket. Nilai 0 berarti harga khusus nol, bukan kosong.</p><div class="cc-field-grid">    <label class="block">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Tanggal Jatuh Tempo
+        </span>
+        <input name="due_day"
+               type="number"
+               min="1"
+               max="28"
+               value="{{ old('due_day', $customer->due_day ?? '') }}"
+               class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20"
+               required>
+        @error('due_day')
+            <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
+        @enderror
+    </label>    <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
         <label class="block">
             <span class="text-xs font-bold text-amber-800 dark:text-amber-200">
                 Harga Khusus per Bulan
@@ -161,10 +150,7 @@
                 <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
             @enderror
         </label>
-    </div>
-</div>
-
-@php
+    </div></div>@php
     $selectedTaxMode = old(
         'tax_mode',
         isset($customer) ? ($customer->tax_mode ?? 'inclusive') : 'exclusive'
@@ -233,16 +219,53 @@
     @error('tax_mode')
         <p class="mt-2 text-xs font-medium text-rose-600">{{ $message }}</p>
     @enderror
-</fieldset>
-
-<label class="block">
-    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-        Alamat
-    </span>
-    <textarea name="address"
-              rows="3"
-              class="mt-1 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 dark:border-slate-700 dark:text-white dark:focus:border-cyan-400 dark:focus:ring-cyan-500/20">{{ old('address', $customer->address ?? '') }}</textarea>
-    @error('address')
-        <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
-    @enderror
-</label>
+</fieldset></section>
+</div>
+<script>
+(() => {
+    const editor = document.querySelector('[data-cc-editor]');
+    if (!editor) return;
+    const router = editor.querySelector('[data-cc-router]');
+    const packages = editor.querySelector('[data-cc-package]');
+    const note = editor.querySelector('[data-cc-package-note]');
+    const edit = editor.dataset.edit === '1';
+    const area = editor.querySelector('select[name="area_id"]');
+    function update() {
+        if (!edit && area) {
+            Array.from(router.options).forEach(option => {
+                if (!option.value) return;
+                const allowed = !!area.value && (option.dataset.ccAreas || '').split(',').includes(area.value);
+                option.hidden = !allowed;
+                option.disabled = !allowed;
+            });
+            if (router.selectedOptions[0] && router.selectedOptions[0].disabled) router.value = '';
+            router.disabled = !area.value;
+        }
+        const id = router.value;
+        let available = 0;
+        Array.from(packages.options).forEach(option => {
+            if (!option.value) return;
+            const valid = option.dataset.active === '1' && (option.dataset.routers || '').split(',').includes(id);
+            const original = edit && option.dataset.original === '1';
+            option.hidden = !(id && (valid || original));
+            option.disabled = option.hidden;
+            if (valid) available++;
+        });
+        const selected = packages.selectedOptions[0];
+        if (selected && selected.disabled) packages.value = '';
+        packages.disabled = !id;
+        const chosen = packages.selectedOptions[0];
+        const syncAvailable = !!(id && router.dataset.active !== '0' && chosen && chosen.value && chosen.dataset.active === '1' && (chosen.dataset.routers || '').split(',').includes(id));
+        editor.dataset.syncAvailable = syncAvailable ? '1' : '0';
+        if (!id) note.textContent = 'Pilih router terlebih dahulu.';
+        else if (chosen && chosen.value && !syncAvailable) note.textContent = 'Relasi lama tetap ditampilkan. Simpan billing saja dapat mempertahankannya; pengiriman ke MikroTik memerlukan router dan paket aktif yang sesuai.';
+        else if (!available) note.textContent = 'Belum ada paket aktif untuk router ini. Hubungkan paket melalui menu Paket Internet.';
+        else note.textContent = 'Hanya paket aktif yang terhubung ke router pilihan yang dapat dipilih.';
+        editor.dispatchEvent(new CustomEvent('cc-package-change', {bubbles:true}));
+    }
+    if (area) area.addEventListener('change', update);
+    router.addEventListener('change', update);
+    packages.addEventListener('change', update);
+    update();
+})();
+</script>

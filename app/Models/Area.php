@@ -44,4 +44,10 @@ class Area extends Model
     {
         return $this->hasMany(Expense::class);
     }
+
+    public function accessibleRouters(): BelongsToMany
+    {
+        return $this->belongsToMany(Router::class,'area_router_access','area_id','router_id')->withTimestamps();
+    }
+
 }

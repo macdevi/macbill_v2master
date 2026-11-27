@@ -1,107 +1,70 @@
 @extends('layouts.app')
-
-@section('title', 'Edit Pelanggan')
-
+@section('title','Edit Pelanggan')
 @section('content')
-<form method="post"
-      action="{{ route('customers.update', $customer) }}"
-      class="max-w-3xl space-y-5"
-      id="customer-edit-form">
-    @csrf
-    @method('PUT')
-
-    @include('customers.form')
-
-    <input type="hidden" name="save_target" id="save_target" value="billing">
-
-    <div class="flex justify-end">
-        <button type="button"
-                id="open-save-modal"
-                class="rounded-xl bg-cyan-500 px-6 py-3 font-bold text-slate-950 hover:bg-cyan-400">
-            SIMPAN
-        </button>
-    </div>
+@include('customers.partials.workspace-theme')
+<div class="customer-workspace cc-form-wrap">
+<header class="cc-head"><div><h1 class="cc-title">Edit pelanggan</h1><p class="cc-subtitle">{{ $customer->name }} · {{ $customer->customer_code }}</p></div><a class="cc-btn" href="{{ route('customers.index') }}">@include('customers.partials.workspace-icon',['name'=>'back']) Kembali</a></header>
+@include('customers.partials.workspace-messages')
+<div class="cc-note">@include('customers.partials.workspace-icon',['name'=>'info'])<p>Router tidak dapat dipindahkan melalui edit biasa. Saat menyimpan, pilih billing saja atau billing dan MikroTik.</p></div>
+<form method="post" action="{{ route('customers.update',$customer) }}" id="customer-edit-form">@csrf @method('PUT')
+@include('customers.form')
+<input type="hidden" name="save_target" id="save_target" value="billing">
+<div class="cc-savebar"><a class="cc-btn" href="{{ route('customers.index') }}">Batal</a><button type="submit" class="cc-btn cc-primary" id="open-save-modal">@include('customers.partials.workspace-icon',['name'=>'save']) Simpan perubahan</button></div>
 </form>
-
-<div id="save-modal"
-     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900">
-        <h2 class="text-lg font-bold text-slate-900 dark:text-white">
-            Simpan Perubahan Pelanggan
-        </h2>
-
-        <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-            Pilih lokasi penyimpanan data pelanggan.
-        </p>
-
-        <div class="mt-6 space-y-3">
-            <button type="button"
-                    id="save-billing-only"
-                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-left font-semibold text-slate-800 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
-                <span class="block">1. Simpan Billing</span>
-                <span class="mt-1 block text-xs font-normal text-slate-500 dark:text-slate-400">
-                    Simpan hanya ke database billing.
-                </span>
-            </button>
-
-            <button type="button"
-                    id="save-billing-mikrotik"
-                    class="w-full rounded-xl border border-cyan-500 bg-cyan-50 px-4 py-3 text-left font-semibold text-slate-800 hover:bg-cyan-100 dark:border-cyan-600 dark:bg-cyan-900/30 dark:text-slate-100 dark:hover:bg-cyan-900/50">
-                <span class="block">2. Simpan Billing dan MikroTik</span>
-                <span class="mt-1 block text-xs font-normal text-slate-500 dark:text-slate-400">
-                    Simpan ke billing dan sinkronkan PPPoE secret ke MikroTik.
-                </span>
-            </button>
-        </div>
-
-        <div class="mt-6 flex justify-end">
-            <button type="button"
-                    id="close-save-modal"
-                    class="rounded-xl px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                Batal
-            </button>
-        </div>
-    </div>
+<dialog class="cc-dialog" id="save-modal" aria-labelledby="cc-save-title">
+<h2 id="cc-save-title" style="font-size:18px;font-weight:750">Simpan perubahan pelanggan</h2>
+<p class="cc-subtitle">Tujuan MikroTik: {{ $customer->router?->name ?: 'Router tidak tersedia' }}. Pilih tindakan secara sadar.</p>
+<label class="cc-choice"><input type="radio" name="cc_save_choice" value="billing"><span style="font-weight:700">Billing saja<small>Simpan data billing tanpa mengirim perubahan ke MikroTik.</small></span></label>
+<label class="cc-choice"><input type="radio" name="cc_save_choice" value="billing_mikrotik"><span style="font-weight:700">Billing dan MikroTik<small>Simpan billing, lalu perbarui akun PPPoE pada router pelanggan. Jika pengiriman gagal, perubahan billing tetap tersimpan.</small></span></label>
+<p class="cc-row-note" data-cc-sync-warning hidden>Pengiriman tidak tersedia untuk pilihan router/paket ini. Gunakan billing saja untuk mempertahankan relasi lama, atau pilih paket aktif yang sesuai.</p>
+<div class="cc-savebar"><button type="button" class="cc-btn" id="close-save-modal">Batal</button><button type="button" class="cc-btn cc-primary" id="confirm-save" disabled>Konfirmasi simpan</button></div>
+</dialog>
 </div>
-
 <script>
+(() => {
     const form = document.getElementById('customer-edit-form');
-    const modal = document.getElementById('save-modal');
-    const saveTarget = document.getElementById('save_target');
-
-    function openModal() {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+    const dialog = document.getElementById('save-modal');
+    const confirmButton = document.getElementById('confirm-save');
+    const cancel = document.getElementById('close-save-modal');
+    const choices = Array.from(dialog.querySelectorAll('input[name="cc_save_choice"]'));
+    const editor = form.querySelector('[data-cc-editor]');
+    let approved = false;
+    let submitting = false;
+    function refresh() {
+        const allowed = editor.dataset.syncAvailable === '1';
+        const deviceChoice = choices.find(choice => choice.value === 'billing_mikrotik');
+        deviceChoice.disabled = !allowed;
+        if (!allowed) deviceChoice.checked = false;
+        dialog.querySelector('[data-cc-sync-warning]').hidden = allowed;
+        confirmButton.disabled = !choices.some(choice => choice.checked && !choice.disabled) || submitting;
     }
-
-    function closeModal() {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    document.getElementById('open-save-modal').addEventListener('click', openModal);
-    document.getElementById('close-save-modal').addEventListener('click', closeModal);
-
-    modal.addEventListener('click', function (event) {
-        if (event.target === modal) {
-            closeModal();
+    choices.forEach(choice => choice.addEventListener('change', refresh));
+    cancel.addEventListener('click', () => {if (!submitting) dialog.close();});
+    dialog.addEventListener('cancel', event => {if (submitting) event.preventDefault();});
+    form.addEventListener('submit', event => {
+        if (submitting) {event.preventDefault();return;}
+        if (!approved) {
+            event.preventDefault();
+            choices.forEach(choice => choice.checked = false);
+            refresh();
+            dialog.showModal();
+            return;
         }
+        submitting = true;
+        confirmButton.disabled = true;
+        cancel.disabled = true;
+        document.getElementById('open-save-modal').disabled = true;
+        confirmButton.textContent = 'Menyimpan...';
     });
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') {
-            closeModal();
-        }
+    confirmButton.addEventListener('click', () => {
+        const selected = choices.find(choice => choice.checked && !choice.disabled);
+        if (!selected || submitting) return;
+        if (!form.checkValidity()) {dialog.close();form.reportValidity();return;}
+        document.getElementById('save_target').value = selected.value;
+        approved = true;
+        form.requestSubmit();
+        approved = false;
     });
-
-    document.getElementById('save-billing-only').addEventListener('click', function () {
-        saveTarget.value = 'billing';
-        form.submit();
-    });
-
-    document.getElementById('save-billing-mikrotik').addEventListener('click', function () {
-        saveTarget.value = 'billing_mikrotik';
-        form.submit();
-    });
+})();
 </script>
 @endsection

@@ -241,6 +241,18 @@ class InvoiceController extends Controller
                 ->where('status', '!=', 'inactive')
                 ->get() as $customer
         ) {
+            if ($customer->service_activated_on !== null) {
+                $plan = $billingTax->calculateForBillingPeriod(
+                    $customer, $billingMonth->toDateString()
+                );
+
+                if ($plan === null ||
+                    Carbon::parse($plan['billing_date'])->startOfDay()->greaterThan(Carbon::today())) {
+                    $skippedCount++;
+                    continue;
+                }
+            }
+
             $exists = Invoice::where('customer_id', $customer->id)
                 ->whereRaw("strftime('%Y%m', billing_date) = ?", [$period])
                 ->exists();
@@ -272,7 +284,7 @@ class InvoiceController extends Controller
         $message = "Generate massal {$periodLabel} selesai. {$count} tagihan dibuat.";
 
         if ($skippedCount > 0) {
-            $message .= " {$skippedCount} pelanggan dilewati karena tagihannya sudah ada.";
+            $message .= " {$skippedCount} pelanggan dilewati karena tagihan sudah ada atau belum waktunya ditagih.";
         }
 
         if ($creditAppliedCount > 0) {
@@ -340,16 +352,45 @@ class InvoiceController extends Controller
                 ->lockForUpdate()
                 ->findOrFail($customer->id);
 
+            if ($customer->status !== 'active') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'invoice' => 'Invoice baru hanya dapat dibuat untuk pelanggan aktif.',
+                ]);
+            }
+
             $billingDate = $now->copy()->startOfMonth();
             $dueDate = $billingDate->copy()
                 ->day(min($customer->due_day, $billingDate->daysInMonth));
 
-            $tax = $billingTax->calculate($customer);
+            $tax = $billingTax->calculateForBillingPeriod(
+                $customer, $now->copy()->startOfMonth()->toDateString()
+            );
+
+            if ($tax === null) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'invoice' => 'Pelanggan belum memasuki periode tagihan pertama.',
+                ]);
+            }
+
+            if (($customer->service_activated_on !== null ||
+                 $customer->billing_resumed_on !== null) &&
+                Carbon::parse($tax['billing_date'])->startOfDay()->greaterThan(Carbon::today())) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'invoice' => 'Tanggal penerbitan tagihan pertama belum tiba.',
+                ]);
+            }
+
+            if (isset($tax['billing_date'])) {
+                $billingDate = Carbon::parse($tax['billing_date']);
+                $dueDate = Carbon::parse($tax['due_date']);
+            }
             $availableCredit = (float) $customer->credit_balance;
             $creditUsed = min($availableCredit, (float) $tax['gross_amount']);
             $finalAmount = max((float) $tax['gross_amount'] - $creditUsed, 0);
 
             $invoice = Invoice::create([
+                ...$tax,
+                'billing_period' => $now->copy()->startOfMonth()->toDateString(),
                 'customer_id' => $customer->id,
                 'invoice_number' => 'INV-' . $period . '-' . str_pad((string) $customer->id, 6, '0', STR_PAD_LEFT),
                 'billing_date' => $billingDate,

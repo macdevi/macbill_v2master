@@ -200,6 +200,25 @@
             ['title' => null, 'items' => $navItems],
         ];
     }
+    if (in_array($currentUser?->role, ['super_admin', 'admin'], true)) {
+        foreach ($sections as $sectionIndex => $section) {
+            $newItems = [];
+            foreach ($section['items'] as $item) {
+                $newItems[] = $item;
+                if ($item['label'] === 'Pelanggan') {
+                    $newItems[] = [
+                        'label' => 'Pasang Baru',
+                        'href' => route('installations.index'),
+                        'active' => request()->routeIs('installations.*'),
+                        'icon' => $item['icon'],
+                        'tone' => 'sky',
+                    ];
+                }
+            }
+            $sections[$sectionIndex]['items'] = $newItems;
+        }
+    }
+
 @endphp
 
 <div class="flex min-h-screen">
@@ -339,13 +358,13 @@
 
         <section class="p-4 lg:p-8">
             @if(session('success'))
-                <div class="mb-5 rounded-2xl border border-emerald-200 bg-white p-4 text-emerald-700 shadow-sm dark:border-emerald-900/60 dark:bg-slate-900 dark:text-emerald-300">
+                <div class="router-flash-success mb-5 rounded-2xl border border-emerald-200 bg-white p-4 text-emerald-700 shadow-sm dark:border-emerald-900/60 dark:bg-slate-900 dark:text-emerald-300">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="mb-5 rounded-2xl border border-rose-200 bg-white p-4 text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-slate-900 dark:text-rose-300">
+                <div class="router-flash-error mb-5 rounded-2xl border border-rose-200 bg-white p-4 text-rose-700 shadow-sm dark:border-rose-900/60 dark:bg-slate-900 dark:text-rose-300">
                     <ul class="list-disc pl-5">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>

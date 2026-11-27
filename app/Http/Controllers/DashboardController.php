@@ -5,14 +5,11 @@ use App\Models\Customer;
 use App\Models\Expense;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\Router;
 use App\Services\MikroTikService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -59,6 +56,12 @@ class DashboardController extends Controller
         return $query;
     }
 
+    private function psbIncomeQuery(): QueryBuilder
+    {
+        return app(\App\Services\InstallationPaymentService::class)
+            ->visibleIncomeQuery(auth()->user());
+    }
+
     private function buildFinanceActivityQuery(): QueryBuilder
     {
         $user = auth()->user();
@@ -92,7 +95,11 @@ class DashboardController extends Controller
             ->select([
                 DB::raw("'expense' as activity_type"),
                 'id as activity_id',
-                'expense_date as activity_date',
+                DB::raw("CASE
+                    WHEN date(expense_date) = date(created_at)
+                        THEN created_at
+                    ELSE datetime(expense_date)
+                END as activity_date"),
                 'title as activity_title',
                 'category as activity_reference',
                 'payment_method as activity_method',
@@ -100,7 +107,20 @@ class DashboardController extends Controller
                 'status as activity_status',
             ]);
 
+        $psbIncomeQuery = $this->psbIncomeQuery()
+            ->select([
+                DB::raw("'income' as activity_type"),
+                'id as activity_id',
+                'paid_at as activity_date',
+                'customer_name as activity_title',
+                'receipt_number as activity_reference',
+                'method as activity_method',
+                'amount as activity_amount',
+                'status as activity_status',
+            ]);
+
         return $incomeQuery
+            ->unionAll($psbIncomeQuery)
             ->unionAll($expenseQuery)
             ->orderByDesc('activity_date')
             ->orderByDesc('activity_id');
@@ -120,117 +140,26 @@ class DashboardController extends Controller
 
     public function index(MikroTikService $mikrotik): View
     {
-        $onlineUsernames = [];
-        $routers = Router::query()
-            ->where('active', true)
-            ->get();
-        $mikrotikConnected = 'Disconnected';
-        $mikrotikCpu = null;
-        $mikrotikUptime = null;
-        $mikrotikIdentity = null;
-       $traffic = [
-    'interface' => 'ether1',
-    'download_bps' => 0,
-    'upload_bps' => 0,
-    'download' => '0 bps',
-    'upload' => '0 bps',
-];
-         foreach ($routers as $router) {
-            try {
-                $data = $mikrotik->systemResource($router);
-            if (is_array($data)) {
-    $mikrotikConnected = 'Connected';
-    $mikrotikCpu = isset($data['cpu-load']) ? (int) $data['cpu-load'] : null;
-    $mikrotikUptime = $data['uptime'] ?? null;
-    $mikrotikIdentity = $mikrotik->identity($router);
-
-    try {
-        $traffic = $mikrotik->trafficSummary($router, 'ether1');
-    } catch (Throwable $e) {
-        Log::warning('Dashboard gagal membaca trafik ether1 MikroTik.', [
-            'router_id' => $router->id,
-            'router_name' => $router->name,
-            'message' => $e->getMessage(),
-        ]);
-    }
-
-    break;
-}
-            } catch (\Throwable $e) {
-                Log::warning('Dashboard gagal membaca resource MikroTik.', ['router_id' => $router->id, 'router_name' => $router->name, 'message' => $e->getMessage()]);
-            }
-        }
-        foreach ($routers as $router) {
-            try {
-                $activeUsers = $mikrotik->onlineUsers($router);
-                foreach ($activeUsers as $activeUser) {
-                    $username = mb_strtolower(
-                        trim((string) ($activeUser['name'] ?? ''))
-                    );
-                    if ($username !== '') {
-                        $onlineUsernames[$username] = true;
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Dashboard gagal membaca PPPoE aktif dari MikroTik.', [
-                    'router_id' => $router->id,
-                    'router_name' => $router->name,
-                    'message' => $e->getMessage(),
-                ]);
-            }
-        }
-        $customers = $this->visibleCustomerQuery()
-            ->with(['router:id,name'])
-            ->select([
-                'id',
-                'area_id',
-                'router_id',
-                'customer_code',
-                'name',
-                'phone',
-                'pppoe_username',
-                'status',
-            ])
-            ->orderBy('name')
-            ->get();
-        $onlineList = [];
-        $offlineList = [];
-        $isolatedList = [];
-        foreach ($customers as $customer) {
-            $username = mb_strtolower(trim((string) $customer->pppoe_username));
-            $isOnline = $username !== '' && isset($onlineUsernames[$username]);
-            $isIsolated = $customer->status === 'isolated';
-            $customerData = [
-                'id' => $customer->id,
-                'customer_code' => $customer->customer_code,
-                'name' => $customer->name,
-                'phone' => $customer->phone,
-                'pppoe_username' => $customer->pppoe_username,
-                'router_name' => $customer->router?->name,
-            ];
-            if ($isIsolated) {
-                $isolatedList[] = $customerData;
-            } elseif ($isOnline) {
-                $onlineList[] = $customerData;
-            } else {
-                $offlineList[] = $customerData;
-            }
-        }
-        $totalCustomers = $customers->count();
-        $onlineCustomers = count($onlineList);
-        $offlineCustomers = count($offlineList);
-        $isolatedCustomers = count($isolatedList);
-        $onlinePercentage = $totalCustomers > 0
-            ? round(($onlineCustomers / $totalCustomers) * 100, 1)
-            : 0;
-        $offlinePercentage = $totalCustomers > 0
-            ? round(($offlineCustomers / $totalCustomers) * 100, 1)
-            : 0;
-        $customerStatusLists = [
-            'online' => $onlineList,
-            'offline' => $offlineList,
-            'isolated' => $isolatedList,
-        ];
+        $network=app(\App\Services\DashboardNetworkService::class)
+            ->snapshot(auth()->user()?->isSuperAdmin() ? request()->query('router_id') : null,$mikrotik);
+        $monitorRouters=$network['monitorRouters'];
+        $selectedMonitorRouter=$network['selectedMonitorRouter'];
+        $mikrotikConnected=$network['mikrotikConnected'];
+        $mikrotikCpu=$network['mikrotikCpu'];
+        $mikrotikUptime=$network['mikrotikUptime'];
+        $mikrotikIdentity=$network['mikrotikIdentity'];
+        $traffic=$network['traffic'];
+        $totalCustomers=$network['totalCustomers'];
+        $onlineCustomers=$network['onlineCustomers'];
+        $offlineCustomers=$network['offlineCustomers'];
+        $isolatedCustomers=$network['isolatedCustomers'];
+        $unknownCustomers=$network['unknownCustomers'];
+        $onlinePercentage=$network['onlinePercentage'];
+        $offlinePercentage=$network['offlinePercentage'];
+        $customerStatusLists=$network['customerStatusLists'];
+        $networkCheckedAt=$network['networkCheckedAt'];
+        $dashboardScope=auth()->user()?->isSuperAdmin()?'global':'area';
+        $dashboardAreas=\App\Services\CustomerAccessScope::areas()->orderBy('name')->pluck('name');
         $monthStart = now()->startOfMonth();
         $monthEnd = now()->endOfMonth();
         $today = now()->toDateString();
@@ -264,6 +193,12 @@ class DashboardController extends Controller
                     $monthEnd->copy()->endOfDay(),
                 ])
         )->sum('amount');
+        $monthlyIncome += (float) $this->psbIncomeQuery()
+            ->whereBetween('paid_at', [
+                $monthStart->copy()->startOfDay(),
+                $monthEnd->copy()->endOfDay(),
+            ])->sum('amount');
+
         $monthlyExpense = (float) $this->applyExpenseAreaScope(
             Expense::query()
                 ->where('status', 'posted')
@@ -322,6 +257,22 @@ class DashboardController extends Controller
                 ])
                 ->groupBy('customers.area_id')
                 ->pluck('total_income', 'customers.area_id');
+
+            $psbIncomeByArea = $this->psbIncomeQuery()
+                ->whereNotNull('area_id')
+                ->whereBetween('paid_at', [
+                    $monthStart->copy()->startOfDay(),
+                    $monthEnd->copy()->endOfDay(),
+                ])
+                ->selectRaw('area_id, SUM(amount) as total_income')
+                ->groupBy('area_id')
+                ->pluck('total_income', 'area_id');
+
+            foreach ($psbIncomeByArea as $areaId => $amount) {
+                $incomeByArea[$areaId] =
+                    (float) ($incomeByArea[$areaId] ?? 0) + (float) $amount;
+            }
+
             $expenseByArea = Expense::query()
                 ->selectRaw('area_id, SUM(amount) as total_expense')
                 ->whereNotNull('area_id')
@@ -396,6 +347,12 @@ class DashboardController extends Controller
             'onlinePercentage',
             'offlinePercentage',
             'customerStatusLists',
+            'monitorRouters',
+            'selectedMonitorRouter',
+            'unknownCustomers',
+            'networkCheckedAt',
+            'dashboardScope',
+            'dashboardAreas',
             'estimatedRevenue',
             'monthlyIncome',
             'monthlyExpense',

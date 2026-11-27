@@ -1,18 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Import Profile MikroTik')
+@section('title', 'Impor Paket MikroTik')
 
 @section('content')
+@include('packages.partials.catalog-theme')
+<div class="package-catalog package-import">
 @php
     $oldPackages = old('packages', []);
     $hasOldInput = old('packages') !== null;
+    $packagesByProfile = $availablePackages->groupBy('mikrotik_profile');
 @endphp
 
 <div class="mb-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
             <h1 class="text-2xl font-black text-slate-900 dark:text-white">
-                📡 Import Paket dari MikroTik
+                <span class="pc-heading-icon">@include('packages.partials.catalog-icon',['name'=>'download'])</span> Impor paket dari MikroTik
             </h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Pilih profile yang ingin dijadikan paket internet pada sistem billing.
@@ -39,6 +42,30 @@
     </div>
 @endif
 
+{{-- router-source-navigation --}}
+<div class="mb-5 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <p class="text-sm font-bold text-slate-900 dark:text-white">
+        Pilih MikroTik sumber
+    </p>
+    <div class="mt-3 flex flex-wrap gap-2">
+        @foreach ($routers as $sourceRouter)
+            <a href="{{ route('packages.import', $sourceRouter) }}"
+               @if ($sourceRouter->id === $router->id) aria-current="page" @endif
+               class="rounded-xl border px-4 py-2 text-sm font-semibold {{ $sourceRouter->id === $router->id ? 'border-cyan-600 bg-cyan-600 text-white' : 'border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-200' }}">
+                {{ $sourceRouter->name }}
+            </a>
+        @endforeach
+    </div>
+    <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+        Berganti sumber akan membuka ulang halaman. Pilihan paket yang belum disimpan tidak ikut dibawa.
+    </p>
+</div>
+
+<div class="mb-5 rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-sm text-cyan-900 dark:border-cyan-800 dark:bg-cyan-950 dark:text-cyan-200">
+    Impor hanya menyimpan data billing dan hubungan router. Tidak ada pengaturan yang dikirim ke MikroTik.
+    Profil yang sudah terdaftar pada router sumber akan dipertahankan.
+</div>
+
 <form method="POST" action="{{ route('packages.import.store') }}" id="import-packages-form">
     @csrf
 
@@ -61,7 +88,7 @@
                     id="select-all-packages"
                     class="rounded-xl border border-cyan-300 bg-cyan-50 px-4 py-2 text-sm font-bold text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-950/40 dark:text-cyan-200 dark:hover:bg-cyan-950/70"
                 >
-                    Pilih Semua
+                    Pilih semua profil
                 </button>
 
                 <button
@@ -69,7 +96,7 @@
                     id="clear-all-packages"
                     class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
-                    Batalkan Pilihan
+                    Kosongkan pilihan
                 </button>
             </div>
         </div>
@@ -82,10 +109,20 @@
                     $defaultChecked = $hasOldInput
                         ? array_key_exists($index, $oldPackages)
                         : false;
+
+                    $candidatePackages = $packagesByProfile->get(
+                        $p['name'],
+                        collect()
+                    );
+
+                    $linkedPackage = $candidatePackages->first(
+                        fn ($candidate) => $candidate->routers
+                            ->contains('id', $router->id)
+                    );
                 @endphp
 
-                <label
-                    class="package-card block cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition hover:border-cyan-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+                <article
+                    class="pc-import-card package-card block rounded-2xl border bg-white p-5 shadow-sm transition hover:border-cyan-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
                     data-package-card
                 >
                     <div class="flex items-start gap-3">
@@ -158,8 +195,67 @@
                         <input type="hidden" name="packages[{{ $index }}][burst_threshold]" value="{{ $p['burst_threshold'] }}">
                         <input type="hidden" name="packages[{{ $index }}][burst_time]" value="{{ $p['burst_time'] }}">
                         <input type="hidden" name="packages[{{ $index }}][priority]" value="8">
+
+                        {{-- package-import-action --}}
+                        @if ($linkedPackage)
+                            <input type="hidden"
+                                   name="packages[{{ $index }}][import_action]"
+                                   value="link:{{ $linkedPackage->id }}">
+
+                            <div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                                <p class="font-bold">
+                                    Sudah terdaftar: {{ $linkedPackage->name }}
+                                </p>
+                                <p class="mt-1">
+                                    Harga Rp {{ number_format((float) $linkedPackage->monthly_price, 0, ',', '.') }} dan pengaturan lama akan dipertahankan.
+                                </p>
+                                @if (!$linkedPackage->active)
+                                    <p class="mt-1">Paket ini nonaktif. Impor tidak akan mengaktifkannya kembali.</p>
+                                @endif
+                            </div>
+                        @else
+                            <div class="mt-4 space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
+                                <label class="block">
+                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                        Cara menyimpan paket
+                                    </span>
+                                    <select name="packages[{{ $index }}][import_action]"
+                                            class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                            required>
+                                        <option value="new"
+                                            @selected(old("packages.$index.import_action", 'new') === 'new')>
+                                            Buat paket terpisah untuk {{ $router->name }}
+                                        </option>
+                                        @foreach ($candidatePackages->where('active', true) as $candidate)
+                                            <option value="link:{{ $candidate->id }}"
+                                                @selected(old("packages.$index.import_action") === 'link:'.$candidate->id)>
+                                                Gunakan paket bersama: {{ $candidate->name }} (ID {{ $candidate->id }}) | {{ $candidate->routers->pluck('name')->implode(', ') ?: 'Belum dipetakan' }} | Rp {{ number_format((float) $candidate->monthly_price, 0, ',', '.') }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </label>
+
+                                <label class="block">
+                                    <span class="text-xs font-bold text-slate-700 dark:text-slate-200">
+                                        Harga bulanan paket baru (Rp)
+                                    </span>
+                                    <input type="number"
+                                           name="packages[{{ $index }}][monthly_price]"
+                                           value="{{ old("packages.$index.monthly_price") }}"
+                                           min="0"
+                                           step="0.01"
+                                           inputmode="decimal"
+                                           placeholder="Isi harga, atau 0 jika gratis"
+                                           class="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                                </label>
+
+                                <p class="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                                    Jika memakai paket bersama, harga dan pengaturan paket tujuan tetap digunakan. Input harga di atas diabaikan.
+                                </p>
+                            </div>
+                        @endif
                     </template>
-                </label>
+                </article>
             @endforeach
         </div>
 
@@ -170,7 +266,7 @@
                         <span id="selected-count">0</span> paket dipilih
                     </p>
                     <p class="text-sm text-slate-500 dark:text-slate-400">
-                        Hanya paket yang dicentang yang akan ditambahkan ke billing.
+                        Hanya profil yang dicentang yang diproses. Paket yang sudah terdaftar tetap dipertahankan.
                     </p>
                 </div>
 
@@ -204,8 +300,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectedCount = document.getElementById('selected-count');
     const submitButton = document.getElementById('submit-import');
 
+    function configureImportAction(card) {
+        const target = card.querySelector('[data-package-fields]');
+        const select = target.querySelector('select[name$="[import_action]"]');
+        const price = target.querySelector('input[name$="[monthly_price]"]');
+        if (!select || !price) return;
+        const apply = function () {
+            const shared = select.value.startsWith('link:');
+            price.disabled = shared;
+            price.required = !shared;
+            const label = price.closest('label');
+            if (label) label.hidden = shared;
+        };
+        if (select.dataset.pcActionReady !== '1') {
+            select.dataset.pcActionReady = '1';
+            select.addEventListener('change', apply);
+        }
+        apply();
+    }
+
     function syncPackageFields(checkbox) {
         const card = checkbox.closest('[data-package-card]');
+        card.dataset.selected = checkbox.checked ? 'true' : 'false';
         const fieldsTarget = card.querySelector('[data-package-fields]');
         const template = card.querySelector('[data-package-template]');
         const status = card.querySelector('[data-package-status]');
@@ -231,6 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
             status.classList.remove('bg-cyan-100', 'text-cyan-800', 'dark:bg-cyan-950', 'dark:text-cyan-200');
             status.classList.add('bg-slate-100', 'text-slate-500', 'dark:bg-slate-800', 'dark:text-slate-300');
         }
+        configureImportAction(card);
     }
 
     function updateSelection() {
@@ -283,4 +400,5 @@ document.addEventListener('DOMContentLoaded', function () {
     updateSelection();
 });
 </script>
+</div>
 @endsection

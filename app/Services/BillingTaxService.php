@@ -7,9 +7,9 @@ use App\Models\Setting;
 
 class BillingTaxService
 {
-    public function calculate(Customer $customer): array
+    public function calculate(Customer $customer, ?float $amount = null): array
     {
-        $serviceAmount = round((float) $customer->effective_monthly_price, 2);
+        $serviceAmount = round($amount ?? (float) $customer->effective_monthly_price, 2);
 
         $taxEnabled = filter_var(
             Setting::value('billing_tax_enabled', '1'),
@@ -56,5 +56,50 @@ class BillingTaxService
             'tax_mode' => $taxMode,
             'gross_amount' => $grossAmount,
         ];
+    }
+
+    public function calculateForBillingPeriod(
+        Customer $customer,
+        string $issueMonth
+    ): ?array {
+        if ($customer->status !== 'active') {
+            return null;
+        }
+
+        $billing = new InstallationBillingService();
+
+        if ($customer->billing_resumed_on !== null) {
+            $activation = $customer->billing_resumed_on->toDateString();
+            $firstBilling = $billing->firstBillingOn(
+                $activation, (int) $customer->due_day
+            );
+        } elseif ($customer->service_activated_on !== null) {
+            $activation = $customer->service_activated_on->toDateString();
+
+            if ($customer->first_billing_on === null) {
+                throw new \LogicException('Tanggal tagihan pertama belum tersedia.');
+            }
+
+            $firstBilling = $customer->first_billing_on->toDateString();
+        } else {
+            return $this->calculate($customer);
+        }
+
+        $plan = $billing->period(
+            $activation,
+            $firstBilling,
+            (int) $customer->due_day,
+            $issueMonth,
+            (float) $customer->effective_monthly_price
+        );
+
+        if ($plan === null) {
+            return null;
+        }
+
+        return array_merge(
+            $plan,
+            $this->calculate($customer, (float) $plan['service_amount'])
+        );
     }
 }

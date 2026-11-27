@@ -51,7 +51,7 @@ class MikroTikService
             ->equal('interface', $interface)
             ->equal('once', 'true');
 
-        $rows = $this->client($router)->query($query)->read();
+        $rows = self::assertSuccessfulResponse($this->client($router)->query($query)->read());
 
         return $rows[0] ?? [];
     }
@@ -118,7 +118,7 @@ class MikroTikService
         $query = (new Query('/ppp/secret/print'))
             ->where('name', $username);
 
-        $rows = $this->client($router)->query($query)->read();
+        $rows = self::assertSuccessfulResponse($this->client($router)->query($query)->read());
 
         return $rows[0] ?? null;
     }
@@ -128,7 +128,7 @@ class MikroTikService
         $query = (new Query('/ppp/secret/print'))
             ->where('comment', 'macbilling_v2 customer #'.$customerId);
 
-        $rows = $this->client($router)->query($query)->read();
+        $rows = self::assertSuccessfulResponse($this->client($router)->query($query)->read());
 
         return $rows[0] ?? null;
     }
@@ -166,7 +166,7 @@ class MikroTikService
             ->equal('disabled', 'no')
             ->equal('comment', 'macbilling_v2 customer #'.$customer->id);
 
-        return $this->client($router)->query($query)->read();
+        return self::assertSuccessfulResponse($this->client($router)->query($query)->read());
     }
 
     public function updatePppoeSecret(Router $router, Customer $customer): array
@@ -196,7 +196,7 @@ class MikroTikService
             ->equal('disabled', 'no')
             ->equal('comment', 'macbilling_v2 customer #'.$customer->id);
 
-        return $this->client($router)->query($query)->read();
+        return self::assertSuccessfulResponse($this->client($router)->query($query)->read());
     }
 
     public function isolate(Customer $customer): array
@@ -231,7 +231,7 @@ class MikroTikService
             $secretQuery = (new Query('/ppp/secret/print'))
                 ->where('name', trim($customer->pppoe_username));
 
-            $secrets = $client->query($secretQuery)->read();
+            $secrets = self::assertSuccessfulResponse($client->query($secretQuery)->read());
             $secret = $secrets[0] ?? null;
         }
 
@@ -245,19 +245,19 @@ class MikroTikService
             ->equal('disabled', 'no')
             ->equal('comment', 'macbilling_v2 customer #'.$customer->id);
 
-        $client->query($isolateQuery)->read();
+        self::assertSuccessfulResponse($client->query($isolateQuery)->read());
 
         $activeQuery = (new Query('/ppp/active/print'))
             ->where('name', $secret['name'] ?? trim($customer->pppoe_username));
 
-        $activeSessions = $client->query($activeQuery)->read();
+        $activeSessions = self::assertSuccessfulResponse($client->query($activeQuery)->read());
 
         foreach ($activeSessions as $session) {
             if (! empty($session['.id'])) {
                 $disconnectQuery = (new Query('/ppp/active/remove'))
                     ->equal('.id', $session['.id']);
 
-                $client->query($disconnectQuery)->read();
+                self::assertSuccessfulResponse($client->query($disconnectQuery)->read());
             }
         }
 
@@ -325,5 +325,35 @@ class MikroTikService
         return $this->client($router)
             ->query('/ppp/secret/print')
             ->read();
+    }
+
+    public static function assertSuccessfulResponse(array $response): array
+    {
+        foreach (['!trap', '!fatal'] as $errorType) {
+            if (array_key_exists($errorType, $response)) {
+                $detail = $response[$errorType];
+                $message = is_array($detail)
+                    ? ($detail['message'] ?? json_encode($detail))
+                    : (string) $detail;
+
+                throw new RuntimeException(
+                    'RouterOS '.$errorType.': '.$message
+                );
+            }
+        }
+
+        if (in_array($response['type'] ?? null, ['!trap', '!fatal'], true)) {
+            throw new RuntimeException(
+                'RouterOS: '.($response['message'] ?? 'operasi gagal.')
+            );
+        }
+
+        foreach ($response as $value) {
+            if (is_array($value)) {
+                self::assertSuccessfulResponse($value);
+            }
+        }
+
+        return $response;
     }
 }

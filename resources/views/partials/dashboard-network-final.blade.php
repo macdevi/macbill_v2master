@@ -606,8 +606,6 @@
 </style>
 
 <style>
-
-<style>
 /* DONUT-LIVE-ANIMATION */
 .db2-network .db2-network-v2__donut {
     position: relative;
@@ -726,4 +724,9 @@
         animation: none;
     }
 }
+</style>
+
+<style>
+/* DASHBOARD-ROUTER-SCOPE-V1 */
+.db2-network .db2-monitor-picker{margin:0 0 14px;padding:11px;border:1px solid #cbd5e1;border-radius:11px;background:#fff;color:#0f172a}.db2-network .db2-monitor-picker>label{display:block;font-size:11px;font-weight:750;margin-bottom:7px}.db2-network .db2-monitor-picker>div{display:flex;gap:7px;align-items:center}.db2-network .db2-monitor-picker select{min-width:0;flex:1;width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#0f172a;font-size:12px}.db2-network .db2-monitor-picker button{padding:9px 11px;border-radius:8px;border:1px solid #0e7490;background:#0e7490;color:#fff;font-size:11px;font-weight:750;cursor:pointer}.db2-network .db2-monitor-picker button:disabled{opacity:.5;cursor:default}.db2-network .db2-monitor-picker p{font-size:10px;line-height:1.6;color:#475569;margin:8px 0 0}.db2-network .db2-monitor-picker select:focus-visible,.db2-network .db2-monitor-picker button:focus-visible{outline:3px solid #22d3ee;outline-offset:2px}.dark .db2-network .db2-monitor-picker{background:#172b3d;border-color:#41516a;color:#edf2f7}.dark .db2-network .db2-monitor-picker select{background:#151e30;border-color:#41516a;color:#edf2f7}.dark .db2-network .db2-monitor-picker p{color:#b8c5d6}.db2-network .db2-network-v2__status--unknown .db2-network-v2__status-dot{background:#64748b;box-shadow:0 0 0 3px #64748b22}.db2-network .db2-network-v2__live{background:#f1f5f9;color:#475569}.dark .db2-network .db2-network-v2__live{background:#263e53;color:#c7d5e7}@media(max-width:640px){.db2-network .db2-monitor-picker select{font-size:16px;min-height:42px}.db2-network .db2-monitor-picker button{min-height:42px}}
 </style>

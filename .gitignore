@@ -39,3 +39,5 @@
 *.bak_*
 *before_*
 *.bak-*
+/install_*.py
+/repair_*.py

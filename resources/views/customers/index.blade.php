@@ -3,13 +3,18 @@
 @section('title', 'Pelanggan')
 
 @section('content')
-<div class="customers-page space-y-5"
-     x-data="{ detailOpen: false, detailId: null, search: '' }"
+@include('customers.partials.workspace-theme')
+@php
+$canManage = in_array(auth()->user()?->role, ['super_admin','admin'], true);
+$serviceLabels = ['active'=>'Aktif', 'isolated'=>'Terisolir', 'inactive'=>'Nonaktif'];
+@endphp
+<div class="customer-workspace customers-page space-y-5"
+     x-data="{ detailOpen: false, detailId: null, search: '', routerFilter: '', serviceFilter: '' }"
      @keydown.escape.window="detailOpen = false">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex min-w-0 items-center gap-3">
             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-xl text-cyan-700 ring-1 ring-cyan-500/20 dark:bg-cyan-400/15 dark:text-cyan-300">
-                👥
+                @include('customers.partials.workspace-icon',['name'=>'users'])
             </div>
             <div class="min-w-0">
                 <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">Pelanggan</h1>
@@ -18,18 +23,19 @@
         </div>
 
         <div class="flex w-full items-center gap-2 sm:w-auto">
+            @if($canManage)
             <details class="relative min-w-0 flex-1 sm:flex-none">
                 <summary class="flex h-10 w-full cursor-pointer list-none items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-sm transition hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-700 dark:hover:bg-slate-800 dark:hover:text-cyan-300 sm:w-auto">
-                    <span>⇅</span>
-                    <span>Import / Export</span>
+                    <span>@include('customers.partials.workspace-icon',['name'=>'exchange'])</span>
+                    <span>Impor / Ekspor</span>
                     <span class="text-[10px]">▼</span>
                 </summary>
 
                 <div class="absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
                     <a href="{{ route('customers.import.mikrotik') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-lg dark:bg-cyan-400/15">📡</span>
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-lg dark:bg-cyan-400/15">@include('customers.partials.workspace-icon',['name'=>'router'])</span>
                         <span class="min-w-0">
-                            <span class="block">Import dari MikroTik</span>
+                            <span class="block">Impor dari MikroTik</span>
                             <span class="mt-0.5 block truncate text-xs font-normal text-slate-400">Ambil akun PPPoE dari router</span>
                         </span>
                     </a>
@@ -37,19 +43,19 @@
                     <a href="{{ route('customers.import.excel') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-100 text-lg text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300">↑</span>
                         <span class="min-w-0">
-                            <span class="block">Import dari Excel</span>
+                            <span class="block">Impor dari Excel</span>
                             <span class="mt-0.5 block truncate text-xs font-normal text-slate-400">Upload data pelanggan</span>
                         </span>
                     </a>
                     <a href="{{ route('customers.export.excel') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg dark:bg-slate-800">↓</span>
                         <span class="min-w-0">
-                            <span class="block">Export ke Excel</span>
-                            <span class="mt-0.5 block truncate text-xs font-normal text-slate-400">Unduh seluruh data pelanggan</span>
+                            <span class="block">Ekspor ke Excel</span>
+                            <span class="mt-0.5 block truncate text-xs font-normal text-slate-400">Unduh pelanggan dalam akses Anda</span>
                         </span>
                     </a>
                     <a href="{{ route('customers.template.excel') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300">
-                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg dark:bg-slate-800">▦</span>
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg dark:bg-slate-800">@include('customers.partials.workspace-icon',['name'=>'file'])</span>
                         <span class="min-w-0">
                             <span class="block">Download Template Excel</span>
                             <span class="mt-0.5 block truncate text-xs font-normal text-slate-400">Format untuk import pelanggan</span>
@@ -57,11 +63,14 @@
                     </a>
                 </div>
             </details>
+            @endif
 
+            @if($canManage)
             <a href="{{ route('customers.create') }}" class="inline-flex h-10 shrink-0 items-center justify-center gap-1 rounded-xl bg-cyan-500 px-3 text-sm font-black text-slate-950 shadow-sm shadow-cyan-500/20 transition hover:bg-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-300/40">
                 <span class="text-base leading-none">+</span>
-                <span class="hidden xs:inline">Tambah</span>
+                <span>Tambah</span>
             </a>
+            @endif
         </div>
     </div>
 
@@ -77,12 +86,17 @@
         </div>
     @endif
 
-    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
+    @if(session('import_errors'))
+    <div class="cc-note" data-tone="warn"><div><p style="font-weight:700">Baris yang tidak diimpor:</p><ul style="list-style:disc;padding-left:18px;max-height:220px;overflow:auto">@foreach(session('import_errors') as $message)<li>{{ $message }}</li>@endforeach</ul></div></div>
+    @endif
+    <p class="cc-row-note">Status layanan berasal dari billing. Koneksi adalah hasil pemeriksaan saat halaman dibuka, bukan pemantauan terus-menerus. Belum diketahui berarti belum berhasil diperiksa.</p>
+    {{-- customer-dropdown-layout-v2 --}}
+    <section class="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
         <div class="border-b border-slate-100 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
             <div class="mb-3 flex items-center justify-between gap-3">
                 <div>
-                    <h2 class="text-sm font-black text-slate-800 dark:text-slate-100">Total Pelanggan: {{ $customers->count() }}</h2>
-                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Cari berdasarkan nama, kode, atau akun PPPoE.</p>
+                    <h2 class="text-sm font-black text-slate-800 dark:text-slate-100">Pelanggan dalam akses Anda: {{ $customers->count() }}</h2>
+                    <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Cari nama, kode, akun PPPoE, router, atau paket.</p>
                 </div>
             </div>
 
@@ -93,14 +107,18 @@
                         <path d="m20 20-3.5-3.5"></path>
                     </svg>
                 </span>
-                <input id="customer-livefind" type="search" x-model="search" placeholder="Cari nama, kode, atau PPPoE" class="block h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-0 pl-11 pr-11 text-sm font-medium text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-300/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-cyan-500 dark:focus:bg-slate-900 dark:focus:ring-cyan-400/15">
+                <input id="customer-livefind" type="search" x-model="search" placeholder="Cari nama, kode, PPPoE, router, atau paket" aria-label="Cari pelanggan" class="block h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-0 pl-11 pr-11 text-sm font-medium text-slate-700 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-cyan-400 focus:bg-white focus:ring-4 focus:ring-cyan-300/30 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-cyan-500 dark:focus:bg-slate-900 dark:focus:ring-cyan-400/15">
                 <button type="button" x-cloak x-show="search.length > 0" @click="search = ''" class="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-lg font-bold leading-none text-slate-400 transition hover:text-slate-700 focus:outline-none dark:hover:text-slate-100" aria-label="Hapus pencarian">
                     <span class="flex h-7 w-7 items-center justify-center rounded-lg transition hover:bg-slate-200 dark:hover:bg-slate-700">×</span>
                 </button>
             </div>
         </div>
 
-        <div class="space-y-3 bg-slate-50 p-3 dark:bg-slate-950">
+            <div class="cc-filters">
+<label>Router<select x-model="routerFilter" aria-label="Filter router pelanggan"><option value="">Semua router dalam daftar</option>@foreach($routers as $filterRouter)<option value="{{ $filterRouter->id }}">{{ $filterRouter->name }}</option>@endforeach</select></label>
+<label>Status layanan<select x-model="serviceFilter" aria-label="Filter status layanan"><option value="">Semua status</option><option value="active">Aktif</option><option value="isolated">Terisolir</option><option value="inactive">Nonaktif</option></select></label>
+</div>
+        <div class="space-y-3 rounded-b-2xl bg-slate-50 p-3 dark:bg-slate-950">
             @forelse($customers as $c)
                 @php
                     $packageName = optional($c->internetPackage)->name ?: 'Belum ada paket';
@@ -116,7 +134,7 @@
                             : 'border-slate-200 bg-white hover:border-cyan-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-900 dark:hover:border-cyan-500/60 dark:hover:bg-slate-800');
                 @endphp
 
-                <article x-show="!search || $el.innerText.toLowerCase().includes(search.toLowerCase())" x-transition.opacity class="rounded-2xl border p-4 shadow-sm transition {{ $customerCardClass }}">
+                <article data-customer-row data-customer-router="{{ $c->router_id }}" data-customer-status="{{ $c->status }}" data-customer-search="{{ $c->name.' '.$c->customer_code.' '.$c->pppoe_username.' '.($c->router?->name ?? '').' '.$packageName }}" x-show="(!search || $el.dataset.customerSearch.toLowerCase().includes(search.trim().toLowerCase())) &amp;&amp; (!routerFilter || $el.dataset.customerRouter === routerFilter) &amp;&amp; (!serviceFilter || $el.dataset.customerStatus === serviceFilter)" x-transition.opacity class="relative rounded-2xl border p-4 shadow-sm transition {{ $customerCardClass }}">
                     <div class="flex gap-3">
                         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl {{ $isIsolated ? 'bg-rose-500/10 text-rose-600 dark:bg-rose-400/10 dark:text-rose-300' : ($isInactive ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-300' : 'bg-cyan-500/10 text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-300') }}">
                             <span class="text-base font-black">{{ strtoupper(substr($c->name ?: '?', 0, 1)) }}</span>
@@ -134,23 +152,17 @@
                                 </div>
 
                                 <div class="flex shrink-0 items-start gap-1.5">
-                                    <div class="pt-0.5 text-right">
-                                        @if($isIsolated)
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-600 ring-1 ring-rose-500/20 dark:text-rose-300"><span class="h-1 w-1 rounded-full bg-rose-500"></span>Terisolir</span>
-                                        @elseif($isInactive)
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-slate-500/10 px-2 py-0.5 text-[10px] font-bold text-slate-600 ring-1 ring-slate-500/20 dark:text-slate-300"><span class="h-1 w-1 rounded-full bg-slate-400"></span>Nonaktif</span>
-                                        @elseif($c->realtime_online)
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-300"><span class="h-1 w-1 rounded-full bg-emerald-500"></span>Online</span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-slate-500/10 px-2 py-0.5 text-[10px] font-bold text-slate-600 ring-1 ring-slate-500/20 dark:text-slate-300"><span class="h-1 w-1 rounded-full bg-slate-400"></span>Offline</span>
-                                        @endif
+                                    <div class="cc-row-status">
+<span class="cc-service" data-status="{{ $c->status }}">Layanan: {{ $serviceLabels[$c->status] ?? $c->status }}</span>
+<span class="cc-connection" data-state="{{ $c->realtime_connection_state }}">Koneksi: {{ ['online'=>'Online','offline'=>'Offline','unknown'=>'Belum diketahui'][$c->realtime_connection_state] ?? 'Belum diketahui' }}</span>
                                     </div>
 
-                                    <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.window="open = false">
-                                        <button type="button" @click="open = !open" :aria-expanded="open.toString()" aria-haspopup="menu" aria-label="Buka aksi pelanggan" class="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-cyan-300/30 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:focus:ring-cyan-400/15">⋮</button>
+                                    <div class="relative" x-data="{ open: false, dropUp: false }" @click.outside="open = false" @keydown.escape.window="open = false" @resize.window="open = false">
+                                        <button type="button" @click="dropUp = (window.innerHeight - $el.getBoundingClientRect().bottom < 280) && ($el.getBoundingClientRect().top > 280); open = !open" :aria-expanded="open.toString()" aria-haspopup="menu" aria-label="Buka aksi pelanggan" class="flex h-8 w-8 items-center justify-center rounded-lg text-lg font-bold leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-4 focus:ring-cyan-300/30 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:focus:ring-cyan-400/15">⋮</button>
 
-                                        <div x-cloak x-show="open" x-transition.origin.top.right role="menu" class="absolute right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
+                                        <div x-cloak x-show="open" x-transition.opacity :class="dropUp ? 'bottom-full mb-2' : 'top-full mt-2'" role="menu" class="absolute right-0 z-50 w-48 max-w-[calc(100vw-2rem)] max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/15 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/40">
                                             <button type="button" @click="detailId = {{ $c->id }}; detailOpen = true; open = false" role="menuitem" class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Detail</button>
+                                            @if($canManage)
                                             <a href="{{ route('customers.edit', $c) }}" role="menuitem" class="flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700 dark:text-slate-200 dark:hover:bg-slate-800">Edit</a>
 
                                             @if($isActive)
@@ -167,18 +179,22 @@
                                                 <div class="px-3 py-2.5 text-xs font-semibold text-slate-400">Status nonaktif perlu ditinjau melalui Edit.</div>
                                             @endif
 
+                                            @endif
+                                            @if($canManage)
                                             <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                                             <form method="POST" action="{{ route('customers.destroy', $c) }}">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" role="menuitem" onclick="return confirm('Hapus pelanggan ini dari billing? Data terkait dapat ikut terhapus dan tidak dapat dipulihkan.')" class="flex w-full items-center rounded-lg px-3 py-2.5 text-left text-sm font-bold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30">Hapus</button>
                                             </form>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                                <span class="cc-router-tag">@include('customers.partials.workspace-icon',['name'=>'router']) {{ $c->router?->name ?: 'Router tidak tersedia' }}</span>
                                 <span class="rounded-md bg-cyan-500/10 px-2 py-1 font-bold text-cyan-700 dark:bg-cyan-400/10 dark:text-cyan-300">{{ $packageName }}</span>
                                 <span class="rounded-md bg-slate-100 px-2 py-1 font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">Rp {{ number_format((float) $effectivePrice, 0, ',', '.') }}/bln</span>
                                 @if($c->monthly_price_override !== null)
@@ -200,10 +216,10 @@
                 </article>
             @empty
                 <div class="px-5 py-16 text-center">
-                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-2xl">👥</div>
+                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-2xl">@include('customers.partials.workspace-icon',['name'=>'users'])</div>
                     <h2 class="mt-4 font-bold text-slate-800 dark:text-slate-100">Belum ada pelanggan</h2>
                     <p class="mx-auto mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">Tambahkan pelanggan secara manual atau import akun PPPoE dari MikroTik.</p>
-                    <a href="{{ route('customers.create') }}" class="mt-5 inline-flex rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-400">+ Tambah Pelanggan</a>
+                    @if($canManage)<a href="{{ route('customers.create') }}" class="mt-5 inline-flex rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-400">+ Tambah Pelanggan</a>@endif
                 </div>
             @endforelse
         </div>
@@ -232,7 +248,7 @@
                                 <div class="mt-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">{{ optional($c->internetPackage)->name ?: '-' }}</div>
                             </div>
                             <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
-                                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Biaya Ditagihkan</div>
+                                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Harga Bulanan</div>
                                 <div class="mt-1.5 text-sm font-bold text-cyan-700 dark:text-cyan-300">Rp {{ number_format((float) $c->effective_monthly_price, 0, ',', '.') }}</div>
                                 @if($c->monthly_price_override !== null)
                                     <div class="mt-1 text-[11px] font-semibold text-amber-700 dark:text-amber-300">Harga khusus</div>
@@ -240,18 +256,13 @@
                             </div>
                             <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
                                 <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Status Akun</div>
-                                <div class="mt-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">{{ ucfirst($c->status ?: 'nonaktif') }}</div>
+                                <div class="mt-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">{{ $serviceLabels[$c->status] ?? $c->status }}</div>
                             </div>
                             <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/70">
-                                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Koneksi Realtime</div>
+                                <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Koneksi saat diperiksa</div>
                                 <div class="mt-1.5 text-sm font-bold text-slate-700 dark:text-slate-100">
-                                    @if($c->status === 'isolated')
-                                        Terisolir
-                                    @elseif($c->realtime_online)
-                                        Online{{ $c->realtime_uptime ? ' · ' . $c->realtime_uptime : '' }}
-                                    @else
-                                        Offline
-                                    @endif
+                                    {{ ['online'=>'Online','offline'=>'Offline','unknown'=>'Belum diketahui'][$c->realtime_connection_state] ?? 'Belum diketahui' }}
+                                    {{ $c->realtime_online && $c->realtime_uptime ? ' · '.$c->realtime_uptime : '' }}
                                 </div>
                             </div>
                         </div>
@@ -276,7 +287,7 @@
                                     <dd class="col-span-2 font-semibold text-slate-700 dark:text-slate-200">Tanggal {{ $c->due_day ?: '-' }} setiap bulan</dd>
                                 </div>
                                 <div class="grid grid-cols-3 gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                                    <dt class="text-slate-400">IP Realtime</dt>
+                                    <dt class="text-slate-400">IP saat diperiksa</dt>
                                     <dd class="col-span-2 break-all font-mono font-semibold text-slate-700 dark:text-slate-200">{{ $c->realtime_address ?: '-' }}</dd>
                                 </div>
                                 <div class="grid grid-cols-3 gap-3 px-4 py-3">

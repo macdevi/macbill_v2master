@@ -3,6 +3,7 @@
 @section('title', 'Import Pelanggan Excel')
 
 @section('content')
+@include('customers.excel-update-preview')
 <div class="mx-auto max-w-3xl space-y-6">
     <div class="flex items-center gap-3">
         <a href="{{ route('customers.index') }}"
@@ -12,7 +13,7 @@
 
         <div>
             <h1 class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                Import Pelanggan dari Excel
+                Import / Update Pelanggan dari Excel
             </h1>
             <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 Data disimpan ke billing saja. Tidak ada akun PPPoE yang dikirim ke MikroTik saat import.
@@ -23,15 +24,16 @@
     @if($errors->any())
         <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300">
             <p class="font-bold">Import belum dapat diproses:</p>
+            <ul class="mt-2 list-disc pl-5">@foreach($errors->all() as $message)<li>{{ $message }}</li>@endforeach</ul>
             <ul class="mt-2 list-disc space-y-1 pl-5">
                 <li>Gunakan template agar header kolom sesuai.</li>
                 <li>Pilih <strong>Wilayah Tujuan Import</strong>; seluruh pelanggan dalam file akan disimpan ke wilayah tersebut.</li>
-                <li>Router dan package harus sama persis dengan nama router/paket yang aktif.</li>
+                <li>Router harus aktif dan tersedia dalam akses Anda. Nama package harus cocok dengan tepat satu paket aktif yang terhubung ke router tersebut.</li>
                 <li><strong>monthly_price_override</strong> opsional; kosongkan untuk memakai harga paket, atau isi angka Rupiah tanpa pemisah, misalnya <code>150000</code>.</li>
                 <li><strong>tax_mode</strong> wajib diisi dengan salah satu nilai: <code>none</code>, <code>inclusive</code>, atau <code>exclusive</code>.</li>
                 <li>Password PPPoE minimal enam karakter dan tidak boleh hanya berupa tanda bintang.</li>
                 <li>Username PPPoE yang sudah ada atau duplikat dalam file akan dilewati.</li>
-                <li>Pelanggan berhasil import mendapat status <strong>Belum Push</strong>.</li>
+                <li>Impor hanya menyimpan billing; akun MikroTik tidak dibuat atau diperbarui.</li>
                 <li>Import ini tidak membuat atau mengubah PPPoE secret di MikroTik.</li>
             </ul>
         </div>
@@ -54,12 +56,12 @@
             <ul class="mt-2 list-disc space-y-1 pl-5">
                 <li>Gunakan template agar header kolom sesuai.</li>
                 <li>Pilih <strong>Wilayah Tujuan Import</strong>; seluruh pelanggan dalam file akan disimpan ke wilayah tersebut.</li>
-                <li>Router dan package harus sama persis dengan nama router/paket yang aktif.</li>
+                <li>Router harus aktif dan tersedia dalam akses Anda. Nama package harus cocok dengan tepat satu paket aktif yang terhubung ke router tersebut.</li>
                 <li><strong>monthly_price_override</strong> opsional; kosongkan untuk memakai harga paket, atau isi angka Rupiah tanpa pemisah, misalnya <code>150000</code>.</li>
                 <li><strong>tax_mode</strong> wajib diisi dengan salah satu nilai: <code>none</code>, <code>inclusive</code>, atau <code>exclusive</code>.</li>
                 <li>Password PPPoE minimal enam karakter dan tidak boleh hanya berupa tanda bintang.</li>
                 <li>Username PPPoE yang sudah ada atau duplikat dalam file akan dilewati.</li>
-                <li>Pelanggan berhasil import mendapat status <strong>Belum Push</strong>.</li>
+                <li>Impor hanya menyimpan billing; akun MikroTik tidak dibuat atau diperbarui.</li>
                 <li>Import ini tidak membuat atau mengubah PPPoE secret di MikroTik.</li>
             </ul>
         </div>
@@ -76,7 +78,7 @@
                 </span>
 
                 <select name="area_id"
-                        required
+                        
                         class="mt-2 block w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
                     <option value="">Pilih wilayah tujuan import</option>
                     @foreach($areas as $area)
@@ -116,7 +118,7 @@
 
                 <button type="submit"
                         class="inline-flex items-center justify-center rounded-xl bg-cyan-500 px-5 py-3 text-sm font-black text-slate-950 shadow-sm shadow-cyan-500/20 transition hover:bg-cyan-400 focus:outline-none focus:ring-4 focus:ring-cyan-300/40">
-                    ↑ Import ke Billing
+                    Proses File Excel
                 </button>
             </div>
         </form>

@@ -9,6 +9,12 @@ class Invoice extends Model
     protected $fillable = [
         'customer_id',
         'billing_period',
+        'service_period_start',
+        'service_period_end',
+        'is_prorated',
+        'charged_days',
+        'cycle_days',
+        'monthly_price_snapshot',
         'invoice_number',
         'billing_date',
         'due_date',
@@ -26,6 +32,12 @@ class Invoice extends Model
 
     protected $casts = [
         'billing_period' => 'date',
+        'service_period_start' => 'date',
+        'service_period_end' => 'date',
+        'is_prorated' => 'boolean',
+        'charged_days' => 'integer',
+        'cycle_days' => 'integer',
+        'monthly_price_snapshot' => 'decimal:2',
         'billing_date' => 'date',
         'due_date' => 'date',
         'service_amount' => 'decimal:2',
