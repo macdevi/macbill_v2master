@@ -51,6 +51,12 @@ class CustomerExcelController extends Controller
 
     public function importStore(Request $request)
     {
+        // excel-roundtrip-v1: hasil ekspor diproses sebagai update.
+        $response = \App\Services\CustomerExcelRoundtrip::dispatch($request);
+        if ($response !== null) {
+            return $response;
+        }
+
         $user = $request->user();
 
         $data = $request->validate([
