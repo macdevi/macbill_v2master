@@ -68,12 +68,7 @@ class BillingTaxService
 
         $billing = new InstallationBillingService();
 
-        if ($customer->billing_resumed_on !== null) {
-            $activation = $customer->billing_resumed_on->toDateString();
-            $firstBilling = $billing->firstBillingOn(
-                $activation, (int) $customer->due_day
-            );
-        } elseif ($customer->service_activated_on !== null) {
+        if ($customer->service_activated_on !== null) {
             $activation = $customer->service_activated_on->toDateString();
 
             if ($customer->first_billing_on === null) {

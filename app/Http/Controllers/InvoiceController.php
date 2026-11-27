@@ -372,8 +372,7 @@ class InvoiceController extends Controller
                 ]);
             }
 
-            if (($customer->service_activated_on !== null ||
-                 $customer->billing_resumed_on !== null) &&
+            if ($customer->service_activated_on !== null &&
                 Carbon::parse($tax['billing_date'])->startOfDay()->greaterThan(Carbon::today())) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'invoice' => 'Tanggal penerbitan tagihan pertama belum tiba.',
